@@ -1246,7 +1246,7 @@
 
             if (searchCtrl) { try { searchCtrl.abort(); } catch (_) { } }
             searchCtrl = new AbortController();
-            const url = `/api/search?word=${encodeURIComponent(term)}`;
+            const url = `http://18.183.225.2/api/search?word=${encodeURIComponent(term)}`;
             const data = await safeFetchJSON(url, { signal: searchCtrl.signal });
 
             const elapsed = performance.now() - startedAt;
@@ -2343,5 +2343,6 @@
         }
     </style>
 </body>
+
 
 </html>
