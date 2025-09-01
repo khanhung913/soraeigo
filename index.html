@@ -1,0 +1,2347 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <title>SoraEigo｜英語単語の検索・毎日クイズ・学習ランキング</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <!-- Set theme ASAP to avoid FOUC -->
+    <script>
+        (function () {
+            try {
+                const saved = localStorage.getItem('el-theme');
+                const theme = saved ? saved : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (_) { }
+        })();
+    </script>
+
+    <style>
+        /* ===== THEME TOKENS ===== */
+        :root {
+            --radius-xl: 1.25rem;
+            --radius-2xl: 1.75rem;
+            --radius-pill: 999px;
+            --transition-fast: .2s ease;
+            --transition-slow: .4s ease;
+        }
+
+        :root[data-theme="light"] {
+            --bg: #f3f6fb;
+            --bg-accent: #e8f3f8;
+            --text: #0f172a;
+            --muted: #6b7280;
+            --card: #ffffff;
+            --border: rgba(15, 23, 42, .08);
+            --shadow: 0 10px 30px rgba(2, 6, 23, .08);
+            --accent: #388da8;
+            --accent-2: #82d8ff;
+            --chip: #eef6ff;
+            --bs-secondary-color: var(--muted);
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0e1217;
+            --bg-accent: #0a0e12;
+            --text: #e5e7eb;
+            --muted: #9aa4b2;
+            --card: #121821;
+            --border: rgba(255, 255, 255, .08);
+            --shadow: 0 14px 40px rgba(0, 0, 0, .6);
+            --accent: #5ac8fa;
+            --accent-2: #2fa1ce;
+            --chip: #152132;
+            --bs-secondary-color: var(--muted);
+        }
+
+        :root {
+            --fab-size: 44px;
+            --fab-gap: 10px;
+        }
+
+        /* ===== GLOBAL ===== */
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            color: var(--text);
+            background:
+                radial-gradient(1200px 600px at 10% -10%, color-mix(in oklab, var(--accent) 14%, transparent) 0%, transparent 60%),
+                radial-gradient(1200px 600px at 110% 110%, color-mix(in oklab, var(--accent-2) 16%, transparent) 0%, transparent 60%),
+                linear-gradient(180deg, var(--bg) 0%, var(--bg-accent) 100%);
+            background-attachment: fixed;
+            /* cố định */
+            background-repeat: no-repeat;
+            /* không lặp */
+        }
+
+        .container-xxl {
+            max-width: 1200px;
+        }
+
+        .shadow-soft {
+            box-shadow: var(--shadow);
+        }
+
+        .rounded-2xl {
+            border-radius: var(--radius-2xl);
+        }
+
+        .rounded-xl {
+            border-radius: var(--radius-xl);
+        }
+
+        .ring-1 {
+            border: 1px solid var(--border);
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* ===== HEADER ===== */
+        .site-header {
+            backdrop-filter: saturate(1.2) blur(6px);
+            background: color-mix(in oklab, var(--card) 86%, transparent);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .navbar .navbar-brand,
+        .navbar .nav-link {
+            color: var(--text);
+        }
+
+        .navbar .nav-link {
+            opacity: .86;
+        }
+
+        .navbar .nav-link:hover,
+        .navbar .nav-link:focus {
+            opacity: 1;
+        }
+
+        .navbar .navbar-brand:hover {
+            text-decoration: none;
+        }
+
+        .logo-mark {
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            background: radial-gradient(circle at 30% 30%, var(--accent) 0%, var(--accent-2) 70%);
+            color: white;
+            font-weight: 700;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-search-hero {
+            border-radius: var(--radius-pill);
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+            color: #fff;
+            font-weight: 600;
+            padding: .6rem 1rem;
+            border: 0;
+            transform: translateZ(0);
+            transition: transform var(--transition-fast), filter var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .btn-search-hero:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+        }
+
+        .theme-toggle,
+        .google-btn {
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border);
+            background: color-mix(in oklab, var(--card) 92%, transparent);
+            color: var(--text);
+        }
+
+        .google-btn i {
+            color: #EA4335;
+        }
+
+        :root[data-theme="dark"] .navbar-toggler-icon {
+            filter: invert(1) grayscale(1);
+        }
+
+        /* ===== SEARCH PANEL ===== */
+        .search-panel {
+            position: relative;
+            padding: 1.25rem;
+            border-radius: var(--radius-2xl);
+            border: 1px solid var(--border);
+            background: color-mix(in oklab, var(--card) 70%, transparent);
+            box-shadow: var(--shadow);
+        }
+
+        .search-input-wrap {
+            position: relative;
+        }
+
+        .search-input {
+            height: 54px;
+            padding-left: 3rem;
+            padding-right: 6.2rem;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border);
+            background: color-mix(in oklab, var(--card) 96%, transparent);
+            color: var(--text);
+            caret-color: var(--accent);
+            transition: box-shadow var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+        }
+
+        .search-input::placeholder {
+            color: var(--muted);
+            opacity: .9;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 25%, transparent);
+            border-color: color-mix(in oklab, var(--accent) 55%, var(--border));
+            background: color-mix(in oklab, var(--card) 100%, transparent);
+            color: var(--text)
+        }
+
+        input.search-input:-webkit-autofill,
+        input.search-input:-webkit-autofill:focus {
+            -webkit-text-fill-color: var(--text);
+            -webkit-box-shadow: 0 0 0 1000px color-mix(in oklab, var(--card) 100%, transparent) inset;
+            transition: background-color 9999s ease-in-out 0s;
+            caret-color: var(--accent);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: .9rem;
+            top: 50%;
+            translate: 0 -50%;
+            color: var(--muted);
+            font-size: 1.2rem;
+        }
+
+        .search-btn {
+            position: absolute;
+            right: .5rem;
+            top: 50%;
+            translate: 0 -50%;
+            height: 44px;
+            padding: 0 1rem;
+            border: none;
+            color: #fff;
+            border-radius: var(--radius-pill);
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+            font-weight: 600;
+            transition: transform var(--transition-fast), filter var(--transition-fast);
+        }
+
+        .search-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+        }
+
+        .history-wrap {
+            margin-top: .75rem;
+            position: relative;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .4rem .7rem;
+            border-radius: var(--radius-pill);
+            background: var(--chip);
+            color: var(--text);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: transform var(--transition-fast), background var(--transition-fast);
+            margin: 0 .35rem .5rem 0;
+            user-select: none;
+        }
+
+        .chip:hover {
+            transform: translateY(-1px);
+        }
+
+        .chip i {
+            color: var(--muted);
+        }
+
+        .result-list .result-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            background:
+                linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, transparent), color-mix(in oklab, var(--card) 88%, transparent)) padding-box,
+                linear-gradient(135deg, color-mix(in oklab, var(--accent) 60%, transparent), color-mix(in oklab, var(--accent-2) 60%, transparent)) border-box;
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .result-list .result-card:hover {
+            transform: translateY(-2px);
+        }
+
+        /* ===== DAILY ===== */
+        .daily-card {
+            border: 1px solid var(--border);
+            background: color-mix(in oklab, var(--card) 94%, transparent);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .daily-card:hover {
+            transform: translateY(-3px) !important;
+        }
+
+        .speak-btn {
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border);
+            background:
+                linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, transparent), color-mix(in oklab, var(--card) 88%, transparent)) padding-box,
+                linear-gradient(135deg, color-mix(in oklab, var(--accent) 60%, transparent), color-mix(in oklab, var(--accent-2) 60%, transparent)) border-box;
+            color: var(--text);
+            padding: .35rem .7rem;
+        }
+
+        /* ===== QUIZ & LEADERBOARD ===== */
+        .leaderboard-card,
+        .quiz-card {
+            border: 1px solid var(--border);
+            background: color-mix(in oklab, var(--card) 94%, transparent);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+        }
+
+        .lb-item {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .5rem .25rem;
+            border-radius: .75rem;
+        }
+
+        .lb-rank {
+            width: 28px;
+            text-align: right;
+            font-weight: 700;
+            opacity: .75;
+        }
+
+        .lb-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            color: #fff;
+            background: radial-gradient(100% 100% at 30% 30%, var(--accent), var(--accent-2));
+            box-shadow: var(--shadow);
+            user-select: none;
+        }
+
+        .lb-name {
+            font-weight: 600;
+        }
+
+        .lb-score {
+            margin-left: auto;
+            font-weight: 700;
+        }
+
+        .lb-time {
+            font-size: .8rem;
+            color: var(--muted);
+        }
+
+        .quiz-option.btn {
+            border: 1px solid var(--border);
+            background: color-mix(in oklab, var(--card) 98%, transparent);
+            text-align: left;
+        }
+
+        .quiz-option.correct {
+            border-color: rgba(16, 185, 129, .6);
+            background: rgba(16, 185, 129, .12);
+        }
+
+        .quiz-option.wrong {
+            border-color: rgba(239, 68, 68, .6);
+            background: rgba(239, 68, 68, .12);
+        }
+
+        .quiz-progress {
+            height: 8px;
+            border-radius: 999px;
+            background: color-mix(in oklab, var(--card) 86%, transparent);
+            overflow: hidden;
+        }
+
+        .quiz-progress>span {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            width: 0%;
+            transition: width .25s ease;
+        }
+
+        .quiz-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+            font-size: .9rem;
+            color: var(--muted);
+        }
+
+        .score-meter {
+            position: relative;
+            height: 12px;
+            border-radius: 999px;
+            background: color-mix(in oklab, var(--card) 86%, transparent);
+            overflow: hidden;
+        }
+
+        .score-meter>span {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        }
+
+        .score-meter-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+            font-size: .9rem;
+            color: var(--muted);
+        }
+
+        .score-meter-value {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .badge-soft {
+            border: 1px solid var(--border);
+            background: color-mix(in oklab, var(--card) 98%, transparent);
+            border-radius: var(--radius-pill);
+            padding: .25rem .6rem;
+            color: var(--muted);
+        }
+
+        /* ===== VOCAB ===== */
+        .topic-card,
+        .subtopic-card,
+        .word-card {
+            border: 1px solid var(--border);
+            background:
+                linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, transparent), color-mix(in oklab, var(--card) 88%, transparent)) padding-box,
+                linear-gradient(135deg, color-mix(in oklab, var(--accent) 60%, transparent), color-mix(in oklab, var(--accent-2) 60%, transparent)) border-box;
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow);
+            transition: transform var(--transition-fast);
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .topic-card:hover,
+        .subtopic-card:hover,
+        .word-card:hover {
+            transform: translateY(-4px)
+        }
+
+        /* ===== TIPS CAROUSEL ===== */
+        .tips-wrap {
+            position: relative;
+        }
+
+        .tips-track {
+            --gap: 1rem;
+            --per-view: 3;
+            display: flex;
+            gap: var(--gap);
+            overflow-x: auto;
+            overflow-y: visible;
+            scroll-snap-type: x mandatory;
+            padding-bottom: .5rem;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            touch-action: pan-x;
+            cursor: grab;
+            overscroll-behavior-x: contain;
+            will-change: scroll-position;
+        }
+
+
+        .tips-track.dragging,
+        .tips-track.dragging * {
+            user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .tips-track.dragging * {
+            user-select: none;
+        }
+
+        .tips-item {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+
+        /* tránh bôi đen text khi kéo */
+
+
+        .tips-track::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tips-item {
+            flex: 0 0 calc((100% - (var(--gap) * (var(--per-view) - 1))) / var(--per-view));
+            scroll-snap-align: start;
+        }
+
+        .tips-card {
+            border: 1px solid var(--border);
+            background:
+                linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, transparent), color-mix(in oklab, var(--card) 88%, transparent)) padding-box,
+                linear-gradient(135deg, color-mix(in oklab, var(--accent) 60%, transparent), color-mix(in oklab, var(--accent-2) 60%, transparent)) border-box;
+            border-radius: var(--radius-2xl);
+            height: 100%;
+        }
+
+        .tips-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: .75rem;
+        }
+
+        .tips-btn {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            color: var(--text);
+            background:
+                linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, transparent), color-mix(in oklab, var(--card) 88%, transparent)) padding-box,
+                linear-gradient(135deg, color-mix(in oklab, var(--accent) 60%, transparent), color-mix(in oklab, var(--accent-2) 60%, transparent)) border-box;
+            display: grid;
+            place-items: center;
+        }
+
+        /* ===== FOOTER & MISC ===== */
+        footer {
+            border-top: 1px solid var(--border);
+            background: color-mix(in oklab, var(--card) 85%, transparent);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            font-weight: 700;
+        }
+
+        .section-title .dot {
+            width: .6rem;
+            height: .6rem;
+            border-radius: 50%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 25%, transparent);
+        }
+
+        .to-top {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            z-index: 1030;
+            width: var(--fab-size);
+            height: var(--fab-size);
+            display: grid;
+            place-items: center;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border);
+            background: color-mix(in oklab, var(--card) 92%, transparent);
+            color: var(--text);
+            box-shadow: var(--shadow);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(8px);
+            transition: opacity var(--transition-fast), transform var(--transition-fast);
+        }
+
+        .to-top.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 991.98px) {
+            .search-panel {
+                padding: 1rem;
+            }
+
+            .search-input {
+                height: 50px;
+            }
+
+            .search-btn {
+                height: 40px;
+            }
+
+            .tips-track {
+                --per-view: 1;
+            }
+        }
+
+        /* FAB (mobile) */
+        .fab-btn {
+            position: fixed;
+            right: 16px;
+            z-index: 1030;
+            width: var(--fab-size);
+            height: var(--fab-size);
+            display: none;
+            place-items: center;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border);
+            background: color-mix(in oklab, var(--card) 92%, transparent);
+            color: var(--text);
+            box-shadow: var(--shadow);
+        }
+
+        #fabTheme {
+            bottom: calc(16px + var(--fab-size) + var(--fab-gap));
+        }
+
+        #fabSearch {
+            bottom: calc(16px + (var(--fab-size) + var(--fab-gap)) * 2);
+        }
+
+        @media (max-width: 991.98px) {
+
+            #fabSearch,
+            #fabTheme {
+                display: grid;
+            }
+
+            #goSearchSm,
+            #themeToggle {
+                display: none !important;
+            }
+        }
+
+        /* ===== Pretty Modal ===== */
+        .el-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: grid;
+            place-items: center;
+            background:
+                radial-gradient(1200px 600px at 20% -10%, color-mix(in oklab, var(--accent) 15%, transparent) 0%, transparent 60%),
+                radial-gradient(1200px 600px at 120% 110%, color-mix(in oklab, var(--accent-2) 18%, transparent) 0%, transparent 60%),
+                color-mix(in oklab, var(--bg) 40%, rgba(0, 0, 0, .45));
+            backdrop-filter: blur(10px) saturate(1.1);
+            animation: elFadeIn .18s ease-out both;
+        }
+
+        .el-modal {
+            position: relative;
+            width: min(520px, calc(100vw - 32px));
+            border-radius: var(--radius-2xl);
+            padding: 18px;
+            background: color-mix(in oklab, var(--card) 82%, transparent);
+            border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .25), var(--shadow);
+            transform: translateY(6px) scale(.98);
+            animation: elPop .25s cubic-bezier(.2, .9, .2, 1.02) .02s both;
+            overflow: hidden;
+        }
+
+        .el-modal::before {
+            /* Gradient glow border */
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            padding: 1px;
+            background:
+                radial-gradient(120% 120% at 0% 0%, color-mix(in oklab, var(--accent) 55%, transparent), transparent 60%),
+                radial-gradient(120% 120% at 100% 100%, color-mix(in oklab, var(--accent-2) 55%, transparent), transparent 60%);
+            -webkit-mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .el-head {
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            padding: 10px 12px 8px;
+        }
+
+        .el-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            font-size: 1.25rem;
+            color: white;
+            background: radial-gradient(circle at 30% 30%, var(--accent), var(--accent-2));
+            box-shadow: 0 10px 30px color-mix(in oklab, var(--accent) 35%, transparent);
+        }
+
+        .el-title {
+            font-weight: 800;
+            letter-spacing: .2px;
+        }
+
+        .el-body {
+            padding: 6px 12px 4px;
+            color: var(--bs-secondary-color);
+        }
+
+        .el-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: .6rem;
+            padding: 14px 12px 6px;
+        }
+
+        .el-btn {
+            border-radius: var(--radius-pill);
+            padding: .55rem 1rem;
+            border: 1px solid var(--border);
+            background: color-mix(in oklab, var(--card) 95%, transparent);
+            color: var(--text);
+            font-weight: 600;
+            transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+        }
+
+        .el-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+        }
+
+        .el-btn:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 25%, transparent);
+        }
+
+        .el-btn--ghost {
+            background: color-mix(in oklab, var(--card) 92%, transparent);
+        }
+
+        .el-btn--danger {
+            border: 0;
+            background: linear-gradient(90deg, #ef4444, #f59e0b);
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, .25);
+        }
+
+        .el-btn--primary {
+            border: 0;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            color: #fff;
+            box-shadow: 0 10px 30px color-mix(in oklab, var(--accent) 30%, transparent);
+        }
+
+        @keyframes elFadeIn {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        @keyframes elPop {
+            from {
+                transform: translateY(8px) scale(.965);
+                opacity: .8
+            }
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1
+            }
+        }
+
+        /* Small screens */
+        @media (max-width: 480px) {
+            .el-head {
+                gap: .75rem;
+            }
+
+            .el-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+                border-radius: 12px;
+            }
+
+            .el-actions {
+                gap: .5rem;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-toggler {
+                display: none !important;
+            }
+
+            .site-header {
+                position: fixed !important;
+                top: 0;
+                left: 0;
+                right: 0;
+                width: 100vw;
+                z-index: 1050;
+            }
+
+            body {
+                padding-top: 70px;
+                /* hoặc đúng chiều cao header của bạn */
+            }
+
+            .navbar-brand,
+            .google-btn {
+                margin: 0 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ===== HEADER ===== -->
+    <header class="site-header position-sticky top-0 z-3">
+        <nav class="navbar navbar-expand-lg container-xxl py-2">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <span class="logo-mark">SE</span><span class="fw-bold">Sora Eigo</span>
+            </a>
+
+            <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <div class="collapse navbar-collapse justify-content-end" id="mainNav">
+                    <ul class="navbar-nav align-items-lg-center me-lg-3 mb-2 mb-lg-0">
+                        <li class="nav-item"><a class="nav-link" href="#searchSec">辞書</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#quizSec">クイズ</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#vocabSec">語彙</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tipsSec">学習のコツ</a></li>
+                    </ul>
+                    <div class="d-flex align-items-center gap-2">
+                        <button id="goSearch" class="btn btn-search-hero d-none d-lg-inline-flex"><i
+                                class="bi bi-search me-2"></i>検索</button>
+                        <button id="themeToggle" class="btn theme-toggle px-3 speak-btn" type="button"
+                            aria-label="Toggle theme">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+                        <!-- Xóa nút đăng nhập Google ở đây -->
+                        <button class="btn btn-search-hero d-lg-none ms-2" id="goSearchSm"><i
+                                class="bi bi-search me-2"></i>検索</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Di chuyển nút đăng nhập Google ra ngoài .navbar-collapse -->
+            <a id="googleAuthBtn" class="btn google-btn d-flex align-items-center gap-2 align-self-center ms-2"
+                href="/oauth2/authorization/google">
+                <i class="bi bi-google"></i><span class="d-none d-sm-inline">Googleでログイン</span>
+            </a>
+        </nav>
+    </header>
+
+    <main class="container-xxl py-4 py-lg-5">
+        <!-- ===== 2.1 SEARCH + DAILY ===== -->
+        <section id="searchSec" class="mb-5">
+            <div class="row g-4">
+                <!-- LEFT: Search -->
+                <div class="col-12 col-lg-7">
+                    <div class="search-panel">
+                        <h2 class="section-title mb-3"><span class="dot"></span><span>英和辞書</span></h2>
+
+                        <form id="searchForm" class="mb-2" autocomplete="off">
+                            <div class="search-input-wrap">
+                                <i class="bi bi-search search-icon"></i>
+                                <input id="searchInput" class="form-control search-input" type="text" inputmode="search"
+                                    placeholder="Search..." aria-label="Search words" />
+                                <button class="search-btn" type="submit" aria-label="Do search">
+                                    <i class="bi bi-arrow-return-left me-1"></i>検索
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="history-wrap" id="historyWrap" aria-live="polite"></div>
+                        <div class="result-list mt-3" id="resultList" aria-live="polite"></div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Daily words -->
+                <div class="col-12 col-lg-5">
+                    <h2 class="section-title mb-3"><span class="dot"></span><span>今日の単語</span></h2>
+                    <div class="row g-3" id="dailyWordsWrap" role="list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 2.2 QUIZ (LEFT: quiz, RIGHT: leaderboard) ===== -->
+        <section id="quizSec" class="mb-5">
+            <h2 class="section-title mb-3"><span class="dot"></span><span>クイズ</span></h2>
+            <div class="row g-4">
+                <div class="col-12 col-lg-8">
+                    <div id="quizWrap" class="quiz-card p-3">
+                        <!-- filled by JS; first render shows Start panel -->
+                    </div>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="leaderboard-card p-3" id="leaderboardWrap">
+                        <!-- leaderboard data by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 2.3 VOCAB (topic -> subtopic -> wordlist, with topic quiz) ===== -->
+        <section id="vocabSec" class="mb-5">
+            <h2 class="section-title mb-3"><span class="dot"></span><span>語彙コレクション</span></h2>
+
+            <!-- NAV breadcrumb -->
+            <div class="d-flex align-items-center gap-2 mb-3 small text-secondary">
+                <span class="badge-soft">トピック</span>
+                <i class="bi bi-chevron-right"></i>
+                <span id="vcCrumbTopic" class="text-secondary">—</span>
+                <i class="bi bi-chevron-right"></i>
+                <span id="vcCrumbSub" class="text-secondary">—</span>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <button id="btnBackVocab" class="btn btn-outline-secondary btn-sm rounded-pill d-none">
+                        <i class="bi bi-arrow-left"></i> 戻る
+                    </button>
+                    <button id="btnTopicQuiz" class="btn btn-search-hero btn-sm rounded-pill disabled" disabled>
+                        <i class="bi bi-play-fill me-1"></i>このテーマでクイズ
+                    </button>
+                </div>
+            </div>
+
+            <!-- GRID holders -->
+            <div id="vcTopicGrid" class="row g-3"></div>
+            <div id="vcSubGrid" class="row g-3 d-none"></div>
+            <div id="vcWordList" class="row g-3 d-none"></div>
+        </section>
+
+        <!-- ===== 2.4 TIPS CAROUSEL ===== -->
+        <section id="tipsSec" class="mb-5">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h2 class="section-title mb-3"><span class="dot"></span><span>英語学習のコツ</span></h2>
+                <button id="btnShowAllTips" class="btn btn-outline-secondary rounded-pill ms-2">すべて見る</button>
+            </div>
+            <div class="tips-wrap" id="tipsCarouselWrap">
+                <div class="tips-track" id="tipsTrack" aria-label="Tips carousel" tabindex="0" role="region"></div>
+                <div class="tips-controls">
+                    <button class="btn tips-btn" id="tipsPrev" aria-label="Previous"><i
+                            class="bi bi-chevron-left"></i></button>
+                    <button class="btn tips-btn" id="tipsNext" aria-label="Next"><i
+                            class="bi bi-chevron-right"></i></button>
+                </div>
+            </div>
+            <div id="allTipsExpanded" class="row g-3 mt-3 d-none" aria-label="All tips list"></div>
+        </section>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="py-4">
+        <div class="d-flex align-items-center justify-content-center">
+            <div class="small text-secondary">© <span id="year"></span> Eigo 365</div>
+        </div>
+    </footer>
+
+    <!-- FAB (mobile): Search + Theme + Back-to-top -->
+    <button id="fabSearch" class="fab-btn" aria-label="Search"><i class="bi bi-search"></i></button>
+    <button id="fabTheme" class="fab-btn" aria-label="Toggle theme"><i class="bi bi-moon-stars"></i></button>
+    <button id="toTop" class="to-top" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        /* ===============================
+           MOCK DATA — fallback
+        =============================== */
+        const DAILY_FALLBACK = [
+            { word: 'serene', phonetic: '/səˈriːn/', meaning: 'thanh bình', example: 'a serene lake at dawn' },
+            { word: 'compile', phonetic: '/kəmˈpaɪl/', meaning: 'biên soạn', example: 'compile a report' },
+            { word: 'tedious', phonetic: '/ˈtiːdiəs/', meaning: 'nhàm chán', example: 'tedious paperwork' },
+            { word: 'versatile', phonetic: '/ˈvɜːsətaɪl/', meaning: 'đa năng', example: 'a versatile tool' },
+        ];
+
+        const LEAD_FALLBACK = [
+            { name: 'Sakura', score: 980, time: Date.now() - 60 * 60 * 1000 },
+            { name: 'Kenji', score: 940, time: Date.now() - 3 * 60 * 60 * 1000 },
+            { name: 'Aoi', score: 920, time: Date.now() - 5 * 60 * 60 * 1000 },
+            { name: 'Minh', score: 900, time: Date.now() - 26 * 60 * 60 * 1000 },
+            { name: 'Yuki', score: 880, time: Date.now() - 2 * 24 * 60 * 60 * 1000 },
+
+        ];
+
+        const QUIZ_FALLBACK = [
+            { id: 1, question: 'Choose the correct meaning of "meticulous".', options: ['careless', 'very careful and precise', 'quick', 'imaginative'], answerIndex: 1, explanation: 'Meticulous means showing great attention to detail.' },
+            { id: 2, question: 'Which sentence is grammatically correct?', options: ['She don’t like tea.', 'He have a car.', 'They has arrived.', 'She doesn’t like tea.'], answerIndex: 3, explanation: 'Third person singular requires "doesn’t".' },
+            { id: 3, question: 'Pick the synonym of "coherent".', options: ['logical', 'random', 'vague', 'loud'], answerIndex: 0, explanation: '"Coherent" ≈ logical and consistent.' },
+            { id: 4, question: 'Fill in: She ___ to the gym every day.', options: ['go', 'goes', 'is go', 'going'], answerIndex: 1, explanation: 'Present simple third person: goes.' },
+            { id: 5, question: 'Which is a noun?', options: ['quickly', 'beauty', 'run', 'blue'], answerIndex: 1, explanation: '"Beauty" is a noun.' }
+        ];
+
+        const TOPIC_FALLBACK = [
+            { id: 1, name: '日常生活', icon: 'bi-house-heart' },
+            { id: 2, name: '学校', icon: 'bi-backpack' },
+            { id: 3, name: '仕事', icon: 'bi-briefcase' },
+            { id: 4, name: '旅行', icon: 'bi-airplane' }
+        ];
+        const SUBTOPIC_FALLBACK = {
+            1: [{ id: 11, name: '食べ物' }, { id: 12, name: '買い物' }],
+            2: [{ id: 21, name: '授業' }, { id: 22, name: '試験' }],
+            3: [{ id: 31, name: '会議' }, { id: 32, name: 'メール' }],
+            4: [{ id: 41, name: '空港' }, { id: 42, name: 'ホテル' }],
+        };
+        const VOCAB_FALLBACK = {
+            11: [{ word: 'apple', meaning: 'りんご', phonetic: '/ˈæpl/', example: 'an apple a day' },
+            { word: 'beef', meaning: '牛肉', phonetic: '/biːf/', example: 'beef steak' }],
+            12: [{ word: 'discount', meaning: '割引', phonetic: '/ˈdɪskaʊnt/', example: 'get a discount' }],
+            21: [{ word: 'assignment', meaning: '課題', phonetic: '/əˈsaɪnmənt/', example: 'submit an assignment' }],
+            22: [{ word: 'score', meaning: '得点', phonetic: '/skɔːr/', example: 'a high score' }],
+            31: [{ word: 'agenda', meaning: '議題', phonetic: '/əˈdʒendə/', example: 'meeting agenda' }],
+            32: [{ word: 'attachment', meaning: '添付ファイル', phonetic: '/əˈtætʃmənt/', example: 'send an attachment' }],
+            41: [{ word: 'boarding', meaning: '搭乗', phonetic: '/ˈbɔːrdɪŋ/', example: 'boarding time' }],
+            42: [{ word: 'reservation', meaning: '予約', phonetic: '/ˌrezərˈveɪʃn/', example: 'make a reservation' }],
+        };
+
+        /* ===============================
+           UTILS
+        =============================== */
+        const qs = (s, r = document) => r.querySelector(s);
+        const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        function escapeHtml(str = '') {
+            return String(str).replace(/[&<>"'`=\/]/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;' }[s]));
+        }
+        async function safeFetchJSON(url, init) {
+            try { const res = await fetch(url, init); if (!res.ok) throw new Error('HTTP ' + res.status); return await res.json(); }
+            catch (e) { if (e.name !== 'AbortError') console.warn('[fetch]', url, e); return null; }
+        }
+        // >>> ADD: detect mobile + safe focus
+        function isMobileLike() {
+            return ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+                && window.matchMedia('(max-width: 991.98px)').matches;
+        }
+        function focusSearchIfDesktop() {
+            if (!isMobileLike()) {
+                document.getElementById('searchInput')?.focus();
+            }
+        }
+
+        /* ===============================
+           THEME TOGGLER
+        =============================== */
+        const themeBtn = document.getElementById('themeToggle');
+        const fabThemeBtn = document.getElementById('fabTheme');
+        function setTheme(next) {
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('el-theme', next);
+            themeBtn.innerHTML = next === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+            if (fabThemeBtn) fabThemeBtn.innerHTML = next === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+        }
+        (function initTheme() { setTheme(document.documentElement.getAttribute('data-theme') || 'light'); })();
+        themeBtn.addEventListener('click', () => { const cur = document.documentElement.getAttribute('data-theme') || 'light'; setTheme(cur === 'light' ? 'dark' : 'light'); });
+
+        /* ===============================
+           HEADER actions
+        =============================== */
+        const goSearchBtn = document.getElementById('goSearch');
+        const goSearchSmBtn = document.getElementById('goSearchSm');
+        function smoothScrollTo(id) {
+            document.querySelector(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => { focusSearchIfDesktop(); }, 400); // CHANGED
+        }
+        goSearchBtn?.addEventListener('click', () => smoothScrollTo('#searchSec'));
+        goSearchSmBtn?.addEventListener('click', () => smoothScrollTo('#searchSec'));
+
+        // Google auth UI (placeholder)
+        // Thay toàn bộ refreshAuthUI() bằng phiên bản này
+        async function refreshAuthUI() {
+            let el = document.querySelector('#btnLogout, #googleAuthBtn');
+            if (!el) return;
+
+            const st = await safeFetchJSON('/api/auth/status');
+            const isLoggedIn = !!(st && (st.loggedIn || st.authenticated || st.user));
+            const name = (st?.name || st?.user?.name || 'User');
+            const avatar = (st?.avatar || st?.picture || '');
+
+            if (isLoggedIn) {
+                if (el.id !== 'btnLogout') {
+                    const b = document.createElement('button');
+                    b.id = 'btnLogout';
+                    b.type = 'button';
+                    b.className = 'btn google-btn theme-toggle d-flex align-items-center gap-2';
+                    b.innerHTML = `${avatar ? `<img src="${escapeHtml(avatar)}" alt="" style="width:22px;height:22px;border-radius:50%">`
+                        : '<i class="bi bi-person-circle"></i>'}
+              <span>${escapeHtml(name)}</span>
+              <span class="d-none d-sm-inline"> / ログアウト</span>`;
+                    el.replaceWith(b);
+                } else {
+                    el.className = 'btn google-btn theme-toggle d-flex align-items-center gap-2';
+                    el.innerHTML = `${avatar ? `<img src="${escapeHtml(avatar)}" alt="" style="width:22px;height:22px;border-radius:50%">`
+                        : '<i class="bi bi-person-circle"></i>'}
+            <span>${escapeHtml(name)}</span>
+            <span class="d-none d-sm-inline"> / ログアウト</span>`;
+                }
+            } else {
+                if (el.id !== 'googleAuthBtn') {
+                    const a = document.createElement('a');
+                    a.id = 'googleAuthBtn';
+                    a.className = 'btn google-btn d-flex align-items-center gap-2';
+                    a.href = '/oauth2/authorization/google';
+                    a.innerHTML = `<i class="bi bi-google"></i><span class="d-none d-sm-inline">Googleでログイン</span>`;
+                    el.replaceWith(a);
+                } else {
+                    el.className = 'btn google-btn d-flex align-items-center gap-2';
+                    el.setAttribute('href', '/oauth2/authorization/google');
+                    el.innerHTML = `<i class="bi bi-google"></i><span class="d-none d-sm-inline">Googleでログイン</span>`;
+                }
+            }
+
+            // MOBILE layout fix
+            if (window.innerWidth <= 991) {
+                const target = document.getElementById(isLoggedIn ? 'btnLogout' : 'googleAuthBtn');
+                if (target) {
+                    //target.style.margin = '32px auto 0';
+                    target.style.display = 'flex';
+                    target.style.justifyContent = 'center';
+                }
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            const el = e.target.closest('#btnLogout');
+            if (!el) return;
+            e.preventDefault();       // ngăn mọi điều hướng mặc định
+            logoutFlow();             // hiện popup + gọi /api/logout
+        });
+
+
+        refreshAuthUI().catch(() => { });
+
+        /* ===============================
+           PLACEHOLDER TYPING
+        =============================== */
+        const phrases = ['Try: concise, alleviate, resilient…', 'Gõ từ khóa rồi Enter để tìm', 'Ví dụ: “meticulous”, “coherent”…'];
+        const inputEl = document.getElementById('searchInput');
+        let phIdx = 0, typingTimer = null, isFocused = false, deleting = false, charIdx = 0;
+        function tickTyping() {
+            const phrase = phrases[phIdx];
+            if (!deleting) {
+                charIdx++; inputEl.placeholder = phrase.slice(0, charIdx);
+                if (charIdx === phrase.length) { deleting = true; clearInterval(typingTimer); typingTimer = setInterval(tickTyping, 1600); return; }
+                clearInterval(typingTimer); typingTimer = setInterval(tickTyping, 55);
+            } else {
+                charIdx = 0; deleting = false; phIdx = (phIdx + 1) % phrases.length;
+                clearInterval(typingTimer); typingTimer = setInterval(tickTyping, 55);
+            }
+        }
+        function startTyping() { if (typingTimer || isFocused) return; tickTyping(); }
+        function stopTyping() { if (typingTimer) { clearInterval(typingTimer); typingTimer = null; } }
+        inputEl.addEventListener('focus', () => { isFocused = true; stopTyping(); });
+        inputEl.addEventListener('blur', () => { isFocused = false; if (!inputEl.value.trim()) startTyping(); });
+        startTyping();
+
+        /* ===============================
+           SEARCH + HISTORY
+           - submit (không realtime)
+           - min render delay 300ms
+           - history clamp tối đa 2 hàng
+        =============================== */
+        const searchForm = document.getElementById('searchForm');
+        const resultList = document.getElementById('resultList');
+        const historyWrap = document.getElementById('historyWrap');
+        const HISTORY_KEY = 'el-search-history';
+        const MIN_RENDER_DELAY_MS = 300;
+        let searchCtrl = null;
+        let searchDebounce = null;
+
+        function loadHistory() { try { const raw = localStorage.getItem(HISTORY_KEY); return raw ? JSON.parse(raw) : []; } catch (_) { return []; } }
+        function saveHistory(list) { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch (_) { } }
+        function pushHistory(q) {
+            const list = loadHistory().filter(x => x.toLowerCase() !== q.toLowerCase());
+            list.unshift(q); saveHistory(list.slice(0, 10)); renderHistory();
+        }
+
+        function clampHistoryTwoRows() {
+            const chips = Array.from(historyWrap.querySelectorAll('.chip')); if (!chips.length) return;
+            chips.forEach(c => c.style.display = '');
+            const tops = [...new Set(chips.map(c => c.offsetTop))].sort((a, b) => a - b);
+            if (tops.length <= 2) return;
+            const thirdTop = tops[2];
+            chips.forEach(c => { if (c.offsetTop >= thirdTop) c.style.display = 'none'; });
+        }
+
+        function renderHistory() {
+            const list = loadHistory();
+            historyWrap.innerHTML = '';
+            if (!list.length) return;
+            const frag = document.createDocumentFragment();
+            list.forEach(q => {
+                const chip = document.createElement('button');
+                chip.type = 'button'; chip.className = 'chip';
+                chip.innerHTML = `<i class="bi bi-clock-history"></i><span>${escapeHtml(q)}</span>`;
+                chip.addEventListener('click', () => {
+                    inputEl.value = q;
+                    pushHistory(q.trim());
+                    // inputEl.focus();  // REMOVED
+                    if (!isMobileLike()) focusSearchIfDesktop();
+                    doSearch(q);
+                });
+                frag.appendChild(chip);
+            });
+            historyWrap.appendChild(frag);
+            requestAnimationFrame(clampHistoryTwoRows);
+        }
+        window.addEventListener('resize', () => { clearTimeout(window.__histClamp); window.__histClamp = setTimeout(renderHistory, 120); });
+
+        async function doSearch(q, addHistoryIfValid = false) {
+            const rawTerm = (q ?? inputEl.value ?? '').trim();
+            const term = rawTerm.toLowerCase();
+            resultList.innerHTML = '';
+            const startedAt = performance.now();
+            resultList.innerHTML = `<div class="text-secondary small"><i class="bi bi-hourglass-split me-2"></i>検索中...</div>`;
+            if (!term) { resultList.innerHTML = ''; return; }
+
+            if (searchCtrl) { try { searchCtrl.abort(); } catch (_) { } }
+            searchCtrl = new AbortController();
+            const url = `/api/search?word=${encodeURIComponent(term)}`;
+            const data = await safeFetchJSON(url, { signal: searchCtrl.signal });
+
+            const elapsed = performance.now() - startedAt;
+            if (elapsed < MIN_RENDER_DELAY_MS) { await new Promise(r => setTimeout(r, MIN_RENDER_DELAY_MS - elapsed)); }
+
+            let items = [];
+            if (Array.isArray(data)) items = data;
+            else if (data && typeof data === 'object') {
+                const inner = data.data ?? data.item ?? data.result ?? null;
+                items = Array.isArray(inner) ? inner : (inner ? [inner] : [data]);
+            }
+            let normalized = (items || []).map(x => ({
+                word: x.word, phonetic: x.phonetic, type: x.type,
+                meaningJa: x.meaningJa ?? x.meaning,
+                detailMeaning: x.detailMeaning, level: x.level ?? '',
+                example: x.example, exampleMeaning: x.exampleMeaning ?? x.example_meaning ?? ''
+            })).filter(x => x.word);
+
+            if (!normalized.length) {
+                resultList.innerHTML = `<div class="alert alert-warning rounded-xl ring-1"><i class="bi bi-emoji-frown me-2"></i>見つかりませんでした。別のキーワードをお試しください。</div>`;
+                return;
+            }
+
+            // ONLY add to history when result has at least a meaning/detail/example
+            if (addHistoryIfValid) {
+                const hasMeaning = normalized.some(x => x.meaningJa || x.detailMeaning || x.example);
+                if (hasMeaning) pushHistory(rawTerm);
+            }
+
+            resultList.innerHTML = '';
+            const frag = document.createDocumentFragment();
+            normalized.forEach((x, i) => {
+                const card = document.createElement('div');
+                card.className = 'result-card speak-btn p-3 mb-3';
+                card.style.animation = `fadeSlideUp .4s ease ${i * 60}ms both`;
+                card.innerHTML = `
+          <div class="d-flex align-items-start justify-content-between">
+            <div class="pe-2">
+              <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                ${x.type ? `<span class="badge text-bg-primary rounded-pill">${escapeHtml(x.type)}</span>` : ''}
+                <h3 class="h4 fw-bold mb-0">${escapeHtml(x.word)}</h3>
+                <span class="text-secondary">${escapeHtml(x.phonetic || '')}</span>
+              </div>
+              ${x.meaningJa ? `<div class="mt-1 fw-semibold">${escapeHtml(x.meaningJa)}</div>` : ''}
+              ${x.detailMeaning ? `<div class="small text-secondary">${escapeHtml(x.detailMeaning)}</div>` : ''}
+              ${x.example ? `<div class="mt-1 small"><span class="text-secondary">例:</span> ${escapeHtml(x.example)}${x.exampleMeaning ? `<div class="text-secondary">${escapeHtml(x.exampleMeaning)}</div>` : ''}</div>` : ''}
+            </div>
+            <button class="btn btn-sm speak-btn" type="button" title="発音を聞く" data-word="${escapeHtml(x.word)}"><i class="bi bi-volume-up"></i></button>
+          </div>`;
+                frag.appendChild(card);
+            });
+            resultList.appendChild(frag);
+            wireSpeakButtons(resultList);
+        }
+
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (searchDebounce) clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => {
+                const q = inputEl.value || '';
+                if (!q.trim()) return;
+                // pushHistory removed here; now conditional inside doSearch
+                doSearch(q, true);
+            }, 300);
+        });
+        renderHistory();
+
+        /* ===============================
+           DAILY WORDS (3-5 items)
+        =============================== */
+        function renderDaily(list) {
+            const wrap = document.getElementById('dailyWordsWrap');
+            wrap.innerHTML = '';
+            (list || []).slice(0, 5).forEach((x, idx) => {
+                const col = document.createElement('div');
+                col.className = 'col-12 col-md-6';
+                col.innerHTML = `
+          <article class="daily-card p-3" style="animation: fadeSlideUp .35s ease ${idx * 60}ms both" role="listitem" tabindex="0" aria-label="${escapeHtml(x.word || '')}">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div class="d-flex align-items-center gap-2">
+                  <h3 class="h5 fw-bold mb-0">${escapeHtml(x.word || '')}</h3>
+                  <span class="small text-secondary">${escapeHtml(x.phonetic || '')}</span>
+                </div>
+                <div class="mt-1"><span class="text-secondary">意味:</span> ${escapeHtml(x.meaning || '')}</div>
+                ${x.example ? `<div class="mt-1 small text-secondary">例: ${escapeHtml(x.example)}</div>` : ''}
+              </div>
+              <button class="btn speak-btn" type="button" title="発音を聞く" data-word="${escapeHtml(x.word || '')}">
+                <i class="bi bi-volume-up"></i>
+              </button>
+            </div>
+          </article>`;
+                col.addEventListener('click', (ev) => {
+                    if (ev.target.closest?.('.speak-btn')) return;
+                    const w = x.word || ''; if (!w) return;
+                    inputEl.value = w;
+                    pushHistory(w.trim());
+                    if (!isMobileLike()) focusSearchIfDesktop(); // CHANGED
+                    doSearch(w);
+                });
+                wrap.appendChild(col);
+            });
+            wireSpeakButtons(wrap);
+        }
+        (async function loadDaily() {
+            const data = await safeFetchJSON('/api/todayVocab');
+            let list = [];
+            if (Array.isArray(data)) list = data;
+            else if (data && typeof data === 'object') list = [data];
+            if (!list?.length) list = DAILY_FALLBACK;
+            list = list.map(x => ({ word: x.word, phonetic: x.phonetic, meaning: x.meaning, example: x.example }));
+            renderDaily(list);
+        })();
+
+        /* ===============================
+           SPEECH
+        =============================== */
+        function speakText(text, lang = 'en-US') {
+            if (!('speechSynthesis' in window)) return false;
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = lang; u.rate = 1; u.pitch = 1; u.volume = 1;
+            window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+            return true;
+        }
+        function wireSpeakButtons(scope) {
+            scope.querySelectorAll('[data-word]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const w = btn.getAttribute('data-word') || '';
+                    const ok = speakText(w, 'en-US');
+                    if (!ok) { btn.disabled = true; btn.title = 'SpeechSynthesis not supported'; }
+                });
+            });
+        }
+
+        /* ===============================
+           LEADERBOARD + QUIZ
+           - Cho phép chơi KHÔNG login: lưu local personal best, KHÔNG submit DB
+           - Nếu login: submit lên /api/quiz/submit và refresh leaderboard
+        =============================== */
+        const leaderboardWrap = document.getElementById('leaderboardWrap');
+        const quizWrap = document.getElementById('quizWrap');
+        const PERSONAL_BEST_KEY = 'el-personal-best-pts';
+
+        const quizState = {
+            questions: [], idx: 0, correct: 0, startedAt: 0,
+            timerId: null, elapsedSec: 0, qStartedMs: 0, points: 0,
+            scoreRafId: null, scoreLastVal: 100, loggedIn: false, answered: false,
+            mode: 'idle'          // 'general' | 'topic' | 'idle'
+        };
+        async function pingAchievementStart() {
+            // Chỉ ping khi quiz tổng
+            if (quizState.mode !== 'general') return;
+            try {
+                // endpoint ví dụ; nếu backend chưa có sẽ fail yên lặng
+                await fetch('/api/achievements/quiz-total/start', { method: 'POST' });
+            } catch (_) { }
+        }
+
+        function initials(name = '') {
+            const parts = String(name).trim().split(/\s+/);
+            if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+            return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+        function formatAgo(ts) {
+            const d = typeof ts === 'number' ? new Date(ts) : new Date(ts || Date.now());
+            const diff = Math.max(0, Date.now() - d.getTime());
+            const m = Math.floor(diff / 60000), h = Math.floor(m / 60), day = Math.floor(h / 24);
+            if (m < 1) return 'たった今'; if (m < 60) return `${m}分前`; if (h < 24) return `${h}時間前`;
+            if (day < 7) return `${day}日前`; return d.toLocaleDateString();
+        }
+
+        function getPersonalBest() {
+            try { const v = Number(localStorage.getItem(PERSONAL_BEST_KEY) || 0); return isNaN(v) ? 0 : v; } catch (_) { return 0; }
+        }
+        function setPersonalBest(v) { try { localStorage.setItem(PERSONAL_BEST_KEY, String(v)); } catch (_) { } }
+
+        function renderLeaderboard(list) {
+            leaderboardWrap.innerHTML = '';
+            const best = getPersonalBest();
+            const box = document.createElement('div');
+            box.innerHTML = `
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="small text-secondary">今週のトップ</div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge-soft">Your Best: <b>${best}</b> pts</span>
+            <button id="btnRefreshLb" class="btn btn-sm btn-outline-secondary rounded-pill">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+        <div id="lbList"></div>`;
+            leaderboardWrap.appendChild(box);
+
+            const listEl = box.querySelector('#lbList');
+            (list || []).forEach((u, i) => {
+                const row = document.createElement('div');
+                row.className = 'lb-item';
+                row.innerHTML = `
+            <div class="lb-rank">${i + 1}</div>
+            <div class="lb-avatar" title="${escapeHtml(u.name)}">
+              ${u.avatar ? `<img src="${u.avatar}" alt="" style="width:40px;height:40px;border-radius:50%">` : escapeHtml(initials(u.name))}
+            </div>
+            <div class="d-flex flex-column">
+              <div class="lb-name">${escapeHtml(u.name)}</div>
+              <div class="lb-time">${formatAgo(u.time)}</div>
+            </div>
+            <div class="lb-score"><i class="bi bi-lightning-charge-fill me-1"></i>${u.score}</div>`;
+                listEl.appendChild(row);
+            });
+
+            box.querySelector('#btnRefreshLb').addEventListener('click', loadLeaderboard);
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const res = await fetch('/api/quiz/leaderboard?size=10');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                const arr = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                const normalized = arr.map(x => ({
+                    name: x.name ?? x.userName ?? 'Guest',
+                    score: Number(x.score ?? x.point ?? 0),
+                    time: x.time ?? x.createdAt ?? Date.now(),
+                    avatar: x.avatar ?? x.user?.avatar ?? x.avatarUrl ?? x.picture ?? null
+                })).sort((a, b) => b.score - a.score).slice(0, 10);
+                renderLeaderboard(normalized.length ? normalized : LEAD_FALLBACK);
+            } catch (e) {
+                console.warn('[leaderboard] fallback', e);
+                renderLeaderboard(LEAD_FALLBACK);
+            }
+        }
+
+        function renderQuizStart() {
+            quizWrap.innerHTML = `
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="small text-secondary">ログイン不要でプレイ可（DB保存なし）</div>
+          <span class="badge-soft">Your Best: <b>${getPersonalBest()}</b> pts</span>
+        </div>
+        <div class="text-center py-4">
+          <div class="mb-3"><i class="bi bi-patch-question" style="font-size:2rem"></i></div>
+          <h3 class="h5 fw-bold mb-2">語彙・文法・一般</h3>
+          <p class="text-secondary mb-3">10問／正解の速さで点数↑（100→0, 10s）</p>
+          <div class="d-flex justify-content-center gap-2">
+            <button id="btnStartQuiz" class="btn btn-search-hero rounded-pill px-4">
+              <i class="bi bi-play-fill me-1"></i>Start Quiz
+            </button>
+            <button id="btnLoadSample" class="btn btn-outline-secondary rounded-pill">デモ問題</button>
+          </div>
+        </div>`;
+            qs('#btnStartQuiz')?.addEventListener('click', handleStartQuizClick);
+            qs('#btnLoadSample')?.addEventListener('click', () => { quizState.questions = ensureTenQuestions(QUIZ_FALLBACK); quizState.idx = 0; quizState.correct = 0; quizState.points = 0; quizState.elapsedSec = 0; quizState.startedAt = Date.now(); setTimerRunning(true); renderQuestion(); });
+        }
+
+        function renderQuizHeader() {
+            return `
+      <div class="quiz-meta mb-2">
+        <div><i class="bi bi-patch-question me-1"></i><span id="quizCounter">${quizState.idx + 1}/${quizState.questions.length}</span></div>
+        <div><i class="bi bi-stopwatch me-1"></i><span id="quizTimer">00:00</span></div>
+      </div>
+      <div class="quiz-progress mb-2"><span id="quizProgressBar" style="width:${(quizState.idx / quizState.questions.length) * 100}%"></span></div>
+      <div class="score-meter-head mb-1">
+        <div class="text-secondary"><i class="bi bi-lightning-charge-fill me-1"></i>Điểm câu này</div>
+        <div class="score-meter-value"><span id="scoreCountdownVal">100</span> pts</div>
+      </div>
+      <div class="score-meter mb-3" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+        <span id="scoreCountdownBar"></span>
+      </div>`;
+        }
+
+        function stopScoreCountdown() { if (quizState.scoreRafId) { cancelAnimationFrame(quizState.scoreRafId); quizState.scoreRafId = null; } }
+        function startScoreCountdown() {
+            stopScoreCountdown();
+            // Thời lượng chuẩn mỗi câu (ms)
+            const COUNTDOWN_MS = 10000;
+
+            // EASING: ease-in (tăng tốc dần). Có thể tinh chỉnh exponent 1.6~2.2
+            const EASE_EXP = 2.2; // càng lớn càng tăng tốc cuối nhiều
+
+            const bar = quizWrap.querySelector('#scoreCountdownBar');
+            const val = quizWrap.querySelector('#scoreCountdownVal');
+            const meter = quizWrap.querySelector('.score-meter');
+            if (!bar || !val || !meter) return;
+
+            // reset UI
+            bar.style.width = '100%';
+            val.textContent = '100';
+            meter.setAttribute('aria-valuenow', '100');
+            quizState.scoreLastVal = 100;
+
+            function easeIn(p) {
+                // clamp p = [0,1]
+                p = Math.max(0, Math.min(1, p));
+                return Math.pow(p, EASE_EXP);
+            }
+
+            function tick() {
+                const elapsed = Math.max(0, performance.now() - quizState.qStartedMs);
+                const prog = Math.max(0, Math.min(1, elapsed / COUNTDOWN_MS)); // 0..1
+                const eased = easeIn(prog);              // tiến độ đã easing
+                const remainPct = Math.max(0, 100 * (1 - eased));
+                const remainInt = Math.round(remainPct);
+
+                // cập nhật UI
+                bar.style.width = `${remainPct}%`;
+                val.textContent = String(remainInt);
+                meter.setAttribute('aria-valuenow', String(remainInt));
+                quizState.scoreLastVal = remainInt;
+
+                if (prog < 1) {
+                    quizState.scoreRafId = requestAnimationFrame(tick);
+                } else {
+                    // HẾT GIỜ
+                    stopScoreCountdown();
+                    if (!quizState.answered) {
+                        timesUpAutoWrong();  // << NEW: tính sai & auto next
+                    }
+                }
+            }
+            function timesUpAutoWrong() {
+                quizState.answered = true; // khóa lại
+
+                // khóa các option
+                const buttons = [...quizWrap.querySelectorAll('.quiz-option')];
+                buttons.forEach(b => b.disabled = true);
+
+                // highlight đáp án đúng (không highlight "wrong" vì user không chọn)
+                const q = quizState.questions[quizState.idx];
+                if (typeof q?.answerIndex === 'number' && buttons[q.answerIndex]) {
+                    buttons[q.answerIndex].classList.add('correct');
+                }
+
+                const expl = quizWrap.querySelector('#explain');
+                if (expl) {
+                    expl.style.display = '';
+                    expl.innerHTML = `<i class="bi bi-hourglass-bottom me-1"></i>時間切れ：この問題は不正解としてカウントされます。`;
+                }
+
+                // bật nút next (phòng trường hợp muốn ấn tay)
+                const nextBtn = quizWrap.querySelector('#btnNext');
+                if (nextBtn) nextBtn.disabled = false;
+
+                // auto-next
+                setTimeout(nextQuestion, 900);
+            }
+
+
+            quizState.scoreRafId = requestAnimationFrame(tick);
+        }
+
+
+        function setTimerRunning(running) {
+            if (running) {
+                if (quizState.timerId) return;
+                quizState.timerId = setInterval(() => {
+                    quizState.elapsedSec++;
+                    const mm = String(Math.floor(quizState.elapsedSec / 60)).padStart(2, '0');
+                    const ss = String(quizState.elapsedSec % 60).padStart(2, '0');
+                    const t = quizWrap.querySelector('#quizTimer'); if (t) t.textContent = `${mm}:${ss}`;
+                }, 1000);
+            } else {
+                if (quizState.timerId) clearInterval(quizState.timerId);
+                quizState.timerId = null;
+            }
+        }
+
+        function renderQuestion() {
+            const q = quizState.questions[quizState.idx];
+            quizState.qStartedMs = performance.now();
+            quizState.answered = false;
+            quizWrap.innerHTML = `
+        ${renderQuizHeader()}
+        <div class="mb-3"><h3 class="h5 fw-bold">${escapeHtml(q.question)}</h3></div>
+        <div id="optWrap" class="d-grid gap-2 mb-2"></div>
+        <div id="explain" class="small text-secondary mb-2" style="display:none"></div>
+        <div class="d-flex justify-content-between">
+          <button id="btnQuit" class="btn btn-outline-secondary rounded-pill"><i class="bi bi-x-circle me-1"></i>終了</button>
+          <button id="btnNext" class="btn btn-search-hero rounded-pill" disabled><i class="bi bi-chevron-right me-1"></i>次へ</button>
+        </div>`;
+            const optWrap = quizWrap.querySelector('#optWrap');
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.type = 'button'; btn.className = 'btn quiz-option';
+                btn.innerHTML = `<span class="me-2 fw-bold">${String.fromCharCode(65 + i)}.</span> ${escapeHtml(opt)}`;
+                btn.addEventListener('click', () => handleAnswer(i, btn, q));
+                optWrap.appendChild(btn);
+            });
+            quizWrap.querySelector('#btnNext').addEventListener('click', nextQuestion);
+            quizWrap.querySelector('#btnQuit').addEventListener('click', () => { setTimerRunning(false); stopScoreCountdown(); renderQuizStart(); });
+            const counter = quizWrap.querySelector('#quizCounter'); const bar = quizWrap.querySelector('#quizProgressBar');
+            if (counter) counter.textContent = `${quizState.idx + 1}/${quizState.questions.length}`;
+            if (bar) bar.style.width = `${(quizState.idx / quizState.questions.length) * 100}%`;
+            startScoreCountdown();
+        }
+
+        function handleAnswer(i, btn, q) {
+            if (quizState.answered) return;         // << NEW: chống double
+            quizState.answered = true;
+            stopScoreCountdown();
+            const buttons = [...quizWrap.querySelectorAll('.quiz-option')]; buttons.forEach(b => b.disabled = true);
+            const expl = quizWrap.querySelector('#explain'); const nextBtn = quizWrap.querySelector('#btnNext');
+
+            if (i === q.answerIndex) {
+                btn.classList.add('correct'); quizState.correct++;
+                const spentMs = Math.max(0, performance.now() - quizState.qStartedMs);
+                const earned = Math.max(0, Math.round(100 * (1 - (spentMs / 10000))));
+                quizState.points += earned;
+                if (expl) { expl.style.display = ''; expl.innerHTML = `<i class="bi bi-info-circle me-1"></i>${escapeHtml(q.explanation || '')}<div class="mt-1">+${earned} pts</div>`; }
+            } else {
+                btn.classList.add('wrong'); buttons[q.answerIndex]?.classList.add('correct');
+                if (expl && q.explanation) { expl.style.display = ''; expl.innerHTML = `<i class="bi bi-info-circle me-1"></i>${escapeHtml(q.explanation)}`; }
+            }
+            if (nextBtn) nextBtn.disabled = false;
+            const bar = quizWrap.querySelector('#quizProgressBar'); if (bar) bar.style.width = `${((quizState.idx + 1) / quizState.questions.length) * 100}%`;
+            setTimeout(nextQuestion, 900);
+        }
+
+        function nextQuestion() { if (quizState.idx < quizState.questions.length - 1) { quizState.idx++; renderQuestion(); } else { finishQuiz(); } }
+
+        // ----- (5) CHỈ UPDATE BEST/SUBMIT KHI mode === 'general' -----
+        function summaryHtml(rankInfo, savedToDb) {
+            const mm = String(Math.floor(quizState.elapsedSec / 60)).padStart(2, '0');
+            const ss = String(quizState.elapsedSec % 60).padStart(2, '0');
+            const acc = Math.round((quizState.correct / quizState.questions.length) * 100);
+            const bestPrev = getPersonalBest();
+            // chỉ tính bestChanged khi là quiz tổng
+            const newBest = quizState.mode === 'general' ? Math.max(bestPrev, quizState.points) : bestPrev;
+            const bestChanged = newBest !== bestPrev;
+
+            return `
+    <div class="text-center mb-3">
+      <div class="display-6 fw-bold mb-2"><i class="bi bi-trophy-fill me-2"></i>${quizState.correct}/${quizState.questions.length}</div>
+      <div class="mb-1"><i class="bi bi-stopwatch me-1"></i>${mm}:${ss}</div>
+      <div class="mb-1"><i class="bi bi-lightning-charge-fill me-1"></i><b>${quizState.points}</b> pts ${bestChanged ? '<span class="badge text-bg-success ms-1">NEW BEST!</span>' : ''}</div>
+      <div class="mb-3 text-secondary">正答率 ${acc}%</div>
+      ${rankInfo?.rank && rankInfo.rank <= 100 ? `<div class="alert alert-success rounded-xl"><i class="bi bi-stars me-1"></i>あなたの順位: <b>#${rankInfo.rank}</b>（Top 100）</div>` : ''}
+      ${savedToDb === false ? `<div class="small text-secondary">（${quizState.mode === 'topic' ? 'トピッククイズは記録に反映されません' : '未ログインのためDBに保存されません'}）</div>` : ''}
+    </div>
+    <div class="d-grid gap-2">
+      <button id="btnBackLb" class="btn btn-outline-secondary rounded-pill"><i class="bi bi-list-ol me-1"></i>ランキングを見る</button>
+      <button id="btnReplay" class="btn btn-search-hero rounded-pill"><i class="bi bi-play-fill me-1"></i>もう一度</button>
+    </div>`;
+        }
+
+
+        // ----- (6) FINISH: Gating theo mode -----
+        async function finishQuiz() {
+            setTimerRunning(false); stopScoreCountdown();
+            const payload = {
+                score: quizState.correct,
+                total: quizState.questions.length,
+                timeMs: quizState.elapsedSec * 1000,
+                startedAt: quizState.startedAt,
+                endedAt: Date.now(),
+                points: quizState.points
+            };
+
+            // Personal best: chỉ cập nhật khi quiz tổng
+            if (quizState.mode === 'general' && quizState.points > getPersonalBest()) {
+                setPersonalBest(quizState.points);
+            }
+            let rankInfo = null, savedToDb = null;
+            try {
+                const st = await safeFetchJSON('/api/auth/status');
+                quizState.loggedIn = !!(st && (st.loggedIn || st.authenticated || st.user));
+            } catch (_) { quizState.loggedIn = false; }
+
+            // Chỉ submit DB khi quiz tổng + đã login
+            if (quizState.mode === 'general' && quizState.loggedIn) {
+                try {
+                    const res = await fetch('/api/quiz/submit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                            // 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')  // nếu backend yêu cầu
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        rankInfo = { rank: data.rank ?? data.data?.rank ?? null };
+                        savedToDb = true;
+                    } else savedToDb = false;
+                } catch (_) { savedToDb = false; }
+            } else {
+                savedToDb = false;
+            }
+
+            quizWrap.innerHTML = summaryHtml(rankInfo, savedToDb);
+            quizWrap.querySelector('#btnBackLb')?.addEventListener('click', () => { renderQuizStart(); loadLeaderboard(); });
+            quizWrap.querySelector('#btnReplay')?.addEventListener('click', handleStartQuizClick);
+            if (quizState.mode === 'general') loadLeaderboard();
+        }
+
+
+        function ensureTenQuestions(qs) {
+            const out = Array.isArray(qs) ? [...qs] : [];
+            if (out.length >= 10) return out.slice(0, 10);
+            const seed = out.length ? [...out] : QUIZ_FALLBACK;
+            while (out.length < 10) { out.push(seed[out.length % seed.length]); }
+            return out.slice(0, 10);
+        }
+
+        async function startQuiz() {
+            quizState.mode = 'general';
+            pingAchievementStart();
+            quizWrap.innerHTML = `<div class="text-secondary small"><i class="bi bi-hourglass-split me-2"></i>読み込み中...</div>`;
+            let questions = [];
+            try {
+                const res = await fetch('/api/quiz/start?size=10');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                const arr = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                questions = arr.map(x => ({
+                    id: x.id ?? x.questionId ?? 0,
+                    question: x.question ?? x.q ?? '',
+                    options: [
+                        x.option1 ?? x.options?.[0],
+                        x.option2 ?? x.options?.[1],
+                        x.option3 ?? x.options?.[2],
+                        x.option4 ?? x.options?.[3]
+                    ].filter(Boolean),
+                    answerIndex: typeof x.answerIndex === 'number' ? (x.answerIndex - 1) : 0,
+                    explanation: x.explanation ?? ''
+                })).filter(q => q.question && q.options?.length >= 2);
+                if (!questions.length) questions = QUIZ_FALLBACK;
+            } catch (e) { console.warn('[quiz] fallback', e); questions = QUIZ_FALLBACK; }
+
+            questions = ensureTenQuestions(questions);
+            quizState.questions = questions; quizState.idx = 0; quizState.correct = 0; quizState.points = 0; quizState.elapsedSec = 0; quizState.startedAt = Date.now();
+            setTimerRunning(true); renderQuestion();
+        }
+
+        async function handleStartQuizClick() {
+            // luôn cho chơi dù chưa login (yêu cầu)
+            startQuiz();
+        }
+
+        // initial renders
+        renderQuizStart();
+        loadLeaderboard();
+
+        /* ===============================
+           VOCAB: topic -> subtopic -> wordlist
+           - Có nút "このテーマでクイズ"
+        =============================== */
+        const vcTopicGrid = qs('#vcTopicGrid');
+        const vcSubGrid = qs('#vcSubGrid');
+        const vcWordList = qs('#vcWordList');
+        const vcCrumbTopic = qs('#vcCrumbTopic');
+        const vcCrumbSub = qs('#vcCrumbSub');
+        const btnTopicQuiz = qs('#btnTopicQuiz');
+        const btnBackVocab = qs('#btnBackVocab');
+        let currentTopic = null, currentSub = null;
+        const topicsCache = { list: null };
+        const subtopicsCache = new Map(); // topicId -> subtopic[]
+        const vocabCache = new Map();     // subId -> word[]
+
+
+        // Hiển thị/ẩn nút trở lại tuỳ màn
+        function showBackBtn(show, handler) {
+            btnBackVocab.classList.toggle('d-none', !show);
+            btnBackVocab.onclick = show ? handler : null;
+        }
+
+        function renderTopics(items) {
+            vcTopicGrid.innerHTML = ''; vcTopicGrid.classList.remove('d-none');
+            vcSubGrid.classList.add('d-none'); vcWordList.classList.add('d-none');
+            vcCrumbTopic.textContent = '—'; vcCrumbSub.textContent = '—';
+            btnTopicQuiz.classList.add('disabled'); btnTopicQuiz.disabled = true;
+            showBackBtn(false);
+
+            (items || []).forEach((t, i) => {
+                const col = document.createElement('div'); col.className = 'col-6 col-md-4 col-lg-3';
+                col.innerHTML = `
+          <article class="topic-card p-3 h-100 d-flex flex-column justify-content-between" style="animation: fadeSlideUp .3s ease ${i * 60}ms both">
+            <div class="d-flex align-items-center gap-2">
+              <div class="feature-icon" style="width:40px;height:40px;border-radius:50%"><i class="bi ${t.icon || 'bi-collection'}"></i></div>
+              <h3 class="h6 fw-bold mb-0">${escapeHtml(t.name)}</h3>
+            </div>
+            <div class="d-flex justify-content-end"><i class="bi bi-chevron-right"></i></div>
+          </article>`;
+                col.addEventListener('click', () => selectTopic(t));
+                vcTopicGrid.appendChild(col);
+            });
+        }
+
+        function renderSubtopics(items) {
+            vcSubGrid.innerHTML = ''; vcTopicGrid.classList.add('d-none');
+            vcSubGrid.classList.remove('d-none'); vcWordList.classList.add('d-none');
+            vcCrumbTopic.textContent = currentTopic?.name || '—'; vcCrumbSub.textContent = '—';
+            btnTopicQuiz.classList.add('disabled'); btnTopicQuiz.disabled = true;
+            showBackBtn(true, () => renderTopics(topicsCache.list || TOPIC_FALLBACK));
+
+            (items || []).forEach((s, i) => {
+                const col = document.createElement('div'); col.className = 'col-6 col-md-4 col-lg-3';
+                col.innerHTML = `
+          <article class="subtopic-card p-3 h-100 d-flex flex-column justify-content-between" style="animation: fadeSlideUp .3s ease ${i * 60}ms both">
+            <h3 class="h6 fw-bold mb-1">${escapeHtml(s.name)}</h3>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="small text-secondary">クリック</span>
+              <i class="bi bi-chevron-right"></i>
+            </div>
+          </article>`;
+                col.addEventListener('click', () => selectSubtopic(s));
+                vcSubGrid.appendChild(col);
+            });
+        }
+
+        function renderWords(list) {
+            vcWordList.innerHTML = '';
+            vcSubGrid.classList.add('d-none');
+            vcWordList.classList.remove('d-none');
+            vcCrumbSub.textContent = currentSub?.name || '—';
+            btnTopicQuiz.classList.remove('disabled'); btnTopicQuiz.disabled = false;
+            showBackBtn(true, () =>
+                renderSubtopics(subtopicsCache.get(currentTopic.id) || SUBTOPIC_FALLBACK[currentTopic.id] || [])
+            );
+
+
+            (list || []).forEach((w, i) => {
+                const col = document.createElement('div'); col.className = 'col-12 col-md-6';
+                col.innerHTML = `
+          <article class="word-card p-3 h-100" style="animation: fadeSlideUp .25s ease ${i * 45}ms both">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="d-flex align-items-center gap-2">
+                  <h3 class="h6 fw-bold mb-0">${escapeHtml(w.word)}</h3>
+                  <span class="small text-secondary">${escapeHtml(w.phonetic || '')}</span>
+                </div>
+                <div class="mt-1"><span class="text-secondary">意味:</span> ${escapeHtml(w.meaning || '')}</div>
+                ${w.example ? `<div class="small text-secondary mt-1">例: ${escapeHtml(w.example)}</div>` : ''}
+              </div>
+              <button class="btn speak-btn" type="button" data-word="${escapeHtml(w.word)}"><i class="bi bi-volume-up"></i></button>
+            </div>
+          </article>`;
+                vcWordList.appendChild(col);
+            });
+            wireSpeakButtons(vcWordList);
+        }
+
+        async function selectTopic(t) {
+            currentTopic = t; currentSub = null;
+            let list = subtopicsCache.get(t.id);
+            if (!list) {
+                const data = await safeFetchJSON(`/api/subtopics?topicId=${encodeURIComponent(t.id)}`);
+                list = Array.isArray(data) && data.length ? data : (SUBTOPIC_FALLBACK[t.id] || []);
+                subtopicsCache.set(t.id, list);    // <-- lưu cache
+            }
+            renderSubtopics(list);
+        }
+
+        async function selectSubtopic(s) {
+            currentSub = s;
+            let list = vocabCache.get(s.id);
+            if (!list) {
+                const data = await safeFetchJSON(`/api/vocab?subId=${encodeURIComponent(s.id)}`);
+                list = Array.isArray(data) && data.length ? data : (VOCAB_FALLBACK[s.id] || []);
+                vocabCache.set(s.id, list);        // <-- lưu cache
+            }
+            renderWords(list);
+        }
+
+        btnTopicQuiz.addEventListener('click', async () => {
+            if (!currentSub) return;
+            quizState.mode = 'topic';
+            let qsData = null;
+            const api = await safeFetchJSON(`/api/quiz/byTopic?subId=${encodeURIComponent(currentSub.id)}&size=10`);
+            if (Array.isArray(api) && api.length) {
+                qsData = api.map(x => ({
+                    question: x.question ?? `Meaning of "${x.word}"?`,
+                    options: [
+                        x.option1 ?? x.options?.[0],
+                        x.option2 ?? x.options?.[1],
+                        x.option3 ?? x.options?.[2],
+                        x.option4 ?? x.options?.[3]
+                    ].filter(Boolean),
+                    // Đáp án trong DB là 1-4, cần chuyển về 0-3
+                    answerIndex: typeof x.answerIndex === 'number' ? (x.answerIndex - 1) : 0,
+                    explanation: x.explanation ?? ''
+                }));
+            } else {
+                // Tạo từ fallback VOCAB: câu hỏi nghĩa từ
+                const voc = VOCAB_FALLBACK[currentSub.id] || [];
+                const pool = voc.slice(0, 12);
+                qsData = pool.map((v, idx) => {
+                    const correct = v.meaning;
+                    const distractors = pool.filter(x => x !== v).slice(0, 3).map(x => x.meaning);
+                    const options = [correct, ...distractors].slice(0, 4).sort(() => Math.random() - 0.5);
+                    return { question: `「${v.word}」の意味は？`, options, answerIndex: options.indexOf(correct), explanation: v.example ? `例: ${v.example}` : '' };
+                });
+            }
+            quizState.questions = ensureTenQuestions(qsData);
+            quizState.idx = 0; quizState.correct = 0; quizState.points = 0;
+            quizState.elapsedSec = 0; quizState.startedAt = Date.now();
+            setTimerRunning(true); renderQuestion();
+            document.querySelector('#quizSec')?.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        (async function initTopics() {
+            const data = await safeFetchJSON('/api/topics');
+            const list = Array.isArray(data) && data.length ? data : TOPIC_FALLBACK;
+            topicsCache.list = list;             // <-- lưu cache
+            renderTopics(list);
+        })();
+
+
+        /* ===============================
+           TIPS CAROUSEL — “giả vô hạn”
+           - render 1 dải [items]*3; khi cuộn gần biên -> nhảy về giữa
+        =============================== */
+        const TIPS_DATA = [
+            { title: '毎日5分の音読', desc: '短い英文を声に出して読むと発音と語順の感覚が鍛えられる。', bullets: ['短文×3を繰り返す', '録音して自己チェック'] },
+            { title: 'シャドーイング', desc: '音声を聞きながら一瞬遅れて復唱。リスニング＆発音に効く。', bullets: ['スクリプト→音声の順', '区切りごとに反復'] },
+            { title: '単語は文で覚える', desc: '単語＋例文で使い方がセットで定着。', bullets: ['自分事に置き換える', '翌日に再テスト'] },
+            { title: 'インプットの比率', desc: '多読・多聴を増やして語感を作る。', bullets: ['1日英語30分', '興味分野から'] },
+            { title: 'アウトプット', desc: '短文ライティング→音読→録音のループ。', bullets: ['1日3文を書く', '翌日リライト'] },
+        ];
+        // === Sensitivity tuning (desktop drag) ===
+        const DRAG_RESIST = 0.75;   // <1: kéo tay -> đi ít hơn
+        const MAX_VELOCITY = 0.80;   // px/ms: trần tốc độ quán tính
+        const START_MOMENTUM = 0.25;   // px/ms: phải nhanh hơn ngưỡng này mới kích hoạt quán tính
+        const STOP_VELOCITY = 0.05;   // px/ms: thấp hơn thì dừng trôi
+        const DECEL = 0.004;  // px/ms^2: hãm mạnh hơn để ngắn lại
+
+        const CLONES = 5; // số lần lặp toàn dải (>=3). Dùng số lẻ để có "giữa".
+        const tipsTrack = document.getElementById('tipsTrack');
+
+        function tipCardHtml(tip, i) {
+            return `
+    <div class="tips-item">
+      <article class="tips-card p-4" style="animation: fadeSlideUp .3s ease ${i * 50}ms both">
+        <h3 class="h5 fw-bold mb-2">${escapeHtml(tip.title)}</h3>
+        <p class="mb-2 text-secondary">${escapeHtml(tip.desc)}</p>
+        <ul class="small text-secondary ps-3 mb-0">
+          ${tip.bullets.map(b => `<li>${escapeHtml(b)}</li>`).join('')}
+        </ul>
+      </article>
+    </div>`;
+        }
+
+        function cardStep() {
+            const first = tipsTrack.querySelector('.tips-item');
+            if (!first) return 0;
+            const gap = parseFloat(getComputedStyle(tipsTrack).gap) || 0;
+            return first.getBoundingClientRect().width + gap;
+        }
+
+        function renderTipsInfinite() {
+            tipsTrack.innerHTML = '';
+            // render CLONES lần
+            for (let c = 0; c < CLONES; c++) {
+                tipsTrack.insertAdjacentHTML('beforeend', TIPS_DATA.map(tipCardHtml).join(''));
+            }
+
+            // đặt scroll ở “dải giữa”
+            requestAnimationFrame(() => {
+                const step = cardStep();
+                const span = step * TIPS_DATA.length; // chiều dài một dải
+                const centerIdx = Math.floor(CLONES / 2);
+                tipsTrack.scrollLeft = span * centerIdx; // chính giữa
+            });
+        }
+
+        function ensureLoop() {
+            const step = cardStep(); if (!step) return;
+            const span = step * TIPS_DATA.length;
+            const centerIdx = Math.floor(CLONES / 2);
+            const center = span * centerIdx;
+
+            const lower = center - span * 0.8;
+            const upper = center + span * 0.8;
+
+            const left = tipsTrack.scrollLeft;
+
+            if (left < lower || left > upper) {
+                const prevBehavior = tipsTrack.style.scrollBehavior;
+                tipsTrack.style.scrollBehavior = 'auto'; // tắt smooth trong 1 tick
+
+                tipsTrack.scrollLeft = left < lower ? (left + span) : (left - span);
+
+                // trả lại như cũ
+                tipsTrack.style.scrollBehavior = prevBehavior || '';
+            }
+        }
+
+        renderTipsInfinite();
+        function perView() {
+            // desktop: 3 card/khung; mobile: 1
+            return window.matchMedia('(min-width: 992px)').matches ? 3 : 1;
+        }
+
+
+        document.getElementById('tipsPrev')
+            .addEventListener('click', () => {
+                tipsTrack.scrollBy({ left: -cardStep() * perView(), behavior: 'smooth' });
+            });
+
+        document.getElementById('tipsNext')
+            .addEventListener('click', () => {
+                tipsTrack.scrollBy({ left: cardStep() * perView(), behavior: 'smooth' });
+            });
+
+        // lắng nghe sự kiện scroll trên đúng phần tử
+        tipsTrack.addEventListener('scroll', () => { ensureLoop(); }, { passive: true });
+
+        // Lăn chuột: map delta dọc -> ngang, mượt và có cảm giác di chuyển
+        tipsTrack.addEventListener('wheel', (e) => {
+            // Nếu user đang cuộn ngang (Shift+wheel) thì giữ nguyên
+            const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+            // Ngăn cuộn trang, chỉ cuộn thanh tips
+            e.preventDefault();
+            tipsTrack.scrollLeft += delta * 0.6; // hệ số 1.1 cho cảm giác rõ ràng
+            ensureLoop();
+        }, { passive: false });
+
+        let isDown = false, pointerId = null;
+        let startX = 0, startLeft = 0;
+        let lastLeft = 0, lastT = 0, velocity = 0;
+        let momentumRaf = null;
+
+        function stopMomentum() {
+            if (momentumRaf) cancelAnimationFrame(momentumRaf);
+            momentumRaf = null;
+        }
+
+        function momentumScroll(v0) {
+            let v = clamp(v0, -MAX_VELOCITY, MAX_VELOCITY);
+            const tStart = performance.now();
+            let tPrev = tStart;
+
+            tipsTrack.classList.add('dragging'); // tắt snap khi đang trôi
+
+            function step(now) {
+                const dt = now - tPrev; tPrev = now;
+                if (dt <= 0) { momentumRaf = requestAnimationFrame(step); return; }
+
+                tipsTrack.scrollLeft += v * dt;
+                ensureLoop();
+
+                // hãm đều
+                v -= Math.sign(v) * DECEL * dt;
+
+                if (Math.abs(v) <= STOP_VELOCITY || (now - tStart) > 2000) {
+                    tipsTrack.classList.remove('dragging'); // bật snap lại
+                    momentumRaf = null;
+                    return;
+                }
+                momentumRaf = requestAnimationFrame(step);
+            }
+            momentumRaf = requestAnimationFrame(step);
+        }
+
+        tipsTrack.addEventListener('pointerdown', (e) => {
+            isDown = true;
+            pointerId = e.pointerId;
+            tipsTrack.setPointerCapture(pointerId);
+            tipsTrack.classList.add('dragging');  // tắt snap + user-select
+
+            stopMomentum();
+            startX = e.clientX;
+            startLeft = tipsTrack.scrollLeft;
+            lastLeft = startLeft;
+            lastT = performance.now();
+            velocity = 0; // reset
+        });
+
+        tipsTrack.addEventListener('pointermove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+
+            // kéo tay có “lì” hơn
+            const dx = (e.clientX - startX) * DRAG_RESIST;
+            tipsTrack.scrollLeft = startLeft - dx;
+            ensureLoop();
+
+            // vận tốc tức thời + low-pass filter (mượt & chống spike)
+            const now = performance.now();
+            const dt = now - lastT;
+            if (dt > 0) {
+                const curLeft = tipsTrack.scrollLeft;
+                const instV = (curLeft - lastLeft) / dt;            // px/ms
+                velocity = velocity * 0.8 + instV * 0.2;            // lọc mượt
+                velocity = clamp(velocity, -MAX_VELOCITY, MAX_VELOCITY);
+                lastLeft = curLeft; lastT = now;
+            }
+        });
+
+        function endDrag() {
+            if (pointerId !== null) { try { tipsTrack.releasePointerCapture(pointerId); } catch (_) { } }
+            isDown = false; pointerId = null;
+
+            // chỉ trôi nếu đủ nhanh
+            if (Math.abs(velocity) > START_MOMENTUM) {
+                momentumScroll(velocity);
+            } else {
+                tipsTrack.classList.remove('dragging'); // bật snap lại
+            }
+            ensureLoop();
+        }
+
+        tipsTrack.addEventListener('pointerup', endDrag);
+        tipsTrack.addEventListener('pointerleave', endDrag);
+        tipsTrack.addEventListener('pointercancel', endDrag);
+
+        /* ===============================
+           MISC
+        =============================== */
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.style.animation = 'fadeSlideUp .4s ease both'; io.unobserve(e.target); } });
+        }, { threshold: .06 });
+        document.querySelectorAll('.topic-card, .tips-card').forEach(el => io.observe(el));
+
+        const fabSearchBtn = document.getElementById('fabSearch');
+        fabSearchBtn?.addEventListener('click', () => { document.querySelector('#searchSec')?.scrollIntoView({ behavior: 'smooth' }); });
+
+        fabThemeBtn?.addEventListener('click', () => { const cur = document.documentElement.getAttribute('data-theme') || 'light'; setTheme(cur === 'light' ? 'dark' : 'light'); });
+
+        const toTop = document.getElementById('toTop');
+        window.addEventListener('scroll', () => { const y = window.scrollY || document.documentElement.scrollTop; if (toTop) (y > 400 ? toTop.classList.add('show') : toTop.classList.remove('show')); });
+        toTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        // Modal confirm đơn giản (không phụ thuộc lib; dùng Bootstrap nếu bạn muốn)
+        // Drop-in: super pretty confirm modal (returns Promise<boolean>)
+        function showConfirm({
+            title = '確認',
+            message = 'この操作を実行しますか？',
+            okText = 'OK',
+            cancelText = 'キャンセル',
+            variant = 'primary',     // 'primary' | 'danger'
+            icon = 'bi-stars',       // bootstrap icon class
+            allowOutsideClose = false
+        } = {}) {
+            return new Promise(resolve => {
+                // create DOM
+                const overlay = document.createElement('div');
+                overlay.className = 'el-overlay';
+                overlay.innerHTML = `
+      <div class="el-modal" role="dialog" aria-modal="true" aria-labelledby="elTitle" aria-describedby="elMsg" tabindex="-1">
+        <div class="el-head">
+          <div class="el-icon"><i class="bi ${icon}"></i></div>
+          <div class="el-title h5 mb-0" id="elTitle">${escapeHtml(title)}</div>
+        </div>
+        <div class="el-body" id="elMsg">${escapeHtml(message)}</div>
+        <div class="el-actions">
+          <button type="button" class="el-btn el-btn--ghost" data-role="cancel">${escapeHtml(cancelText)}</button>
+          <button type="button" class="el-btn ${variant === 'danger' ? 'el-btn--danger' : 'el-btn--primary'}" data-role="ok">${escapeHtml(okText)}</button>
+        </div>
+      </div>
+    `;
+                document.body.appendChild(overlay);
+
+                const modal = overlay.querySelector('.el-modal');
+                const btnOk = overlay.querySelector('[data-role="ok"]');
+                const btnCancel = overlay.querySelector('[data-role="cancel"]');
+
+                // Focus management
+                const prevFocus = document.activeElement;
+                setTimeout(() => btnOk.focus(), 10);
+
+                function close(val) {
+                    overlay.style.animation = 'elFadeIn .14s ease-out reverse both';
+                    modal.style.animation = 'elPop .2s ease reverse both';
+                    setTimeout(() => {
+                        overlay.remove();
+                        if (prevFocus?.focus) prevFocus.focus();
+                        resolve(val);
+                    }, 140);
+                }
+
+                // Events
+                btnOk.addEventListener('click', () => close(true));
+                btnCancel.addEventListener('click', () => close(false));
+                if (allowOutsideClose) {
+                    overlay.addEventListener('click', e => {
+                        if (e.target === overlay) close(false);
+                    });
+                }
+
+                // Keyboard: ESC -> cancel, Enter -> ok, trap Tab
+                overlay.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') { e.preventDefault(); close(false); }
+                    if (e.key === 'Enter') { e.preventDefault(); close(true); }
+                    if (e.key === 'Tab') {
+                        // trap: cycle btnCancel <-> btnOk
+                        const focusables = [btnCancel, btnOk].filter(Boolean);
+                        const i = focusables.indexOf(document.activeElement);
+                        if (e.shiftKey) {
+                            e.preventDefault();
+                            focusables[(i <= 0 ? focusables.length : i) - 1].focus();
+                        } else {
+                            e.preventDefault();
+                            focusables[(i + 1) % focusables.length].focus();
+                        }
+                    }
+                }, true);
+            });
+        }
+
+
+        function getCookie(name) {
+            return document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1] || '';
+        }
+
+        async function logoutFlow() {
+            const ok = await showConfirm({
+                title: 'ログアウト',
+                message: 'アカウントからサインアウトします。よろしいですか？',
+                okText: 'ログアウト',
+                cancelText: 'キャンセル',
+                variant: 'danger',
+                icon: 'bi-box-arrow-right'
+            });
+            if (!ok) return;
+
+            try {
+                const xsrf = document.cookie.split('; ').find(r => r.startsWith('XSRF-TOKEN='))?.split('=')[1] || '';
+                const headers = xsrf ? { 'X-XSRF-TOKEN': xsrf } : {};
+                const res = await fetch('/api/logout', { method: 'POST', headers, credentials: 'same-origin' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                toast('ログアウトしました');
+                await refreshAuthUI();
+            } catch (e) {
+                console.warn(e);
+                toast('ログアウトに失敗しました');
+            }
+        }
+
+        document.getElementById('btnLogout')?.addEventListener('click', logoutFlow);
+
+        // Minimal toast ví dụ (tuỳ bạn đã có sẵn hay chưa)
+        function toast(msg) {
+            const el = document.createElement('div');
+            el.className = 'position-fixed bottom-0 end-0 m-3 p-2 rounded bg-dark text-white small shadow';
+            el.textContent = msg;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 2000);
+        }
+
+        const btnShowAllTips = document.getElementById('btnShowAllTips');
+        const allTipsExpanded = document.getElementById('allTipsExpanded');
+        const tipsCarouselWrap = document.getElementById('tipsCarouselWrap'); // << thêm
+        let tipsExpanded = false;
+
+        function renderAllTipsInline() {
+            if (allTipsExpanded.dataset.rendered) return;
+            const frag = document.createDocumentFragment();
+            TIPS_DATA.forEach((tip, i) => {
+                const col = document.createElement('div');
+                col.className = 'col-12 col-md-6 col-lg-4';
+                col.innerHTML = `
+          <div class="tips-card p-3 h-100" style="animation: fadeSlideUp .35s ease ${i * 60}ms both">
+            <h3 class="h6 fw-bold mb-2">${escapeHtml(tip.title)}</h3>
+            <p class="small text-secondary mb-2">${escapeHtml(tip.desc)}</p>
+            <ul class="small text-secondary ps-3 mb-0">
+              ${tip.bullets.map(b => `<li>${escapeHtml(b)}</li>`).join('')}
+            </ul>
+          </div>`;
+                frag.appendChild(col);
+            });
+            allTipsExpanded.appendChild(frag);
+            allTipsExpanded.dataset.rendered = '1';
+        }
+
+        btnShowAllTips.addEventListener('click', () => {
+            tipsExpanded = !tipsExpanded;
+            if (tipsExpanded) {
+                renderAllTipsInline();
+                allTipsExpanded.classList.remove('d-none');
+                tipsCarouselWrap?.classList.add('d-none');          // ẩn carousel
+                btnShowAllTips.textContent = '閉じる';
+                btnShowAllTips.setAttribute('aria-expanded', 'true');
+            } else {
+                allTipsExpanded.classList.add('d-none');
+                tipsCarouselWrap?.classList.remove('d-none');       // hiện lại carousel
+                btnShowAllTips.textContent = 'すべて見る';
+                btnShowAllTips.setAttribute('aria-expanded', 'false');
+            }
+        });
+    </script>
+
+    <style>
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+    </style>
+</body>
+
+</html>
