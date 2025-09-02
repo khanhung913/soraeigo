@@ -1101,7 +1101,7 @@
             let el = document.querySelector('#btnLogout, #googleAuthBtn');
             if (!el) return;
 
-            const st = await safeFetchJSON('/api/auth/status');
+            const st = await safeFetchJSON('https://api.soraeigo.com/api/auth/status');
             const isLoggedIn = !!(st && (st.loggedIn || st.authenticated || st.user));
             const name = (st?.name || st?.user?.name || 'User');
             const avatar = (st?.avatar || st?.picture || '');
@@ -1129,12 +1129,12 @@
                     const a = document.createElement('a');
                     a.id = 'googleAuthBtn';
                     a.className = 'btn google-btn d-flex align-items-center gap-2';
-                    a.href = '/oauth2/authorization/google';
+                    a.href = 'https://api.soraeigo.com/oauth2/authorization/google';
                     a.innerHTML = `<i class="bi bi-google"></i><span class="d-none d-sm-inline">Googleでログイン</span>`;
                     el.replaceWith(a);
                 } else {
                     el.className = 'btn google-btn d-flex align-items-center gap-2';
-                    el.setAttribute('href', '/oauth2/authorization/google');
+                    el.setAttribute('href', 'https://api.soraeigo.com/oauth2/authorization/google');
                     el.innerHTML = `<i class="bi bi-google"></i><span class="d-none d-sm-inline">Googleでログイン</span>`;
                 }
             }
@@ -1352,7 +1352,7 @@
             wireSpeakButtons(wrap);
         }
         (async function loadDaily() {
-            const data = await safeFetchJSON('/api/todayVocab');
+            const data = await safeFetchJSON('https://api.soraeigo.com/api/todayVocab');
             let list = [];
             if (Array.isArray(data)) list = data;
             else if (data && typeof data === 'object') list = [data];
@@ -1462,7 +1462,7 @@
 
         async function loadLeaderboard() {
             try {
-                const res = await fetch('/api/quiz/leaderboard?size=10');
+                const res = await fetch('https://api.soraeigo.com/api/quiz/leaderboard?size=10');
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 const arr = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
@@ -1709,14 +1709,14 @@
             }
             let rankInfo = null, savedToDb = null;
             try {
-                const st = await safeFetchJSON('/api/auth/status');
+                const st = await safeFetchJSON('https://api.soraeigo.com/api/auth/status');
                 quizState.loggedIn = !!(st && (st.loggedIn || st.authenticated || st.user));
             } catch (_) { quizState.loggedIn = false; }
 
             // Chỉ submit DB khi quiz tổng + đã login
             if (quizState.mode === 'general' && quizState.loggedIn) {
                 try {
-                    const res = await fetch('/api/quiz/submit', {
+                    const res = await fetch('https://api.soraeigo.com/api/quiz/submit', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -1755,7 +1755,7 @@
             quizWrap.innerHTML = `<div class="text-secondary small"><i class="bi bi-hourglass-split me-2"></i>読み込み中...</div>`;
             let questions = [];
             try {
-                const res = await fetch('/api/quiz/start?size=10');
+                const res = await fetch('https://api.soraeigo.com/api/quiz/start?size=10');
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 const arr = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
@@ -1891,7 +1891,7 @@
             currentTopic = t; currentSub = null;
             let list = subtopicsCache.get(t.id);
             if (!list) {
-                const data = await safeFetchJSON(`/api/subtopics?topicId=${encodeURIComponent(t.id)}`);
+                const data = await safeFetchJSON(`https://api.soraeigo.com/api/subtopics?topicId=${encodeURIComponent(t.id)}`);
                 list = Array.isArray(data) && data.length ? data : (SUBTOPIC_FALLBACK[t.id] || []);
                 subtopicsCache.set(t.id, list);    // <-- lưu cache
             }
@@ -1902,7 +1902,7 @@
             currentSub = s;
             let list = vocabCache.get(s.id);
             if (!list) {
-                const data = await safeFetchJSON(`/api/vocab?subId=${encodeURIComponent(s.id)}`);
+                const data = await safeFetchJSON(`https://api.soraeigo.com/api/vocab?subId=${encodeURIComponent(s.id)}`);
                 list = Array.isArray(data) && data.length ? data : (VOCAB_FALLBACK[s.id] || []);
                 vocabCache.set(s.id, list);        // <-- lưu cache
             }
@@ -1913,7 +1913,7 @@
             if (!currentSub) return;
             quizState.mode = 'topic';
             let qsData = null;
-            const api = await safeFetchJSON(`/api/quiz/byTopic?subId=${encodeURIComponent(currentSub.id)}&size=10`);
+            const api = await safeFetchJSON(`https://api.soraeigo.com/api/quiz/byTopic?subId=${encodeURIComponent(currentSub.id)}&size=10`);
             if (Array.isArray(api) && api.length) {
                 qsData = api.map(x => ({
                     question: x.question ?? `Meaning of "${x.word}"?`,
@@ -1946,7 +1946,7 @@
         });
 
         (async function initTopics() {
-            const data = await safeFetchJSON('/api/topics');
+            const data = await safeFetchJSON('https://api.soraeigo.com/api/topics');
             const list = Array.isArray(data) && data.length ? data : TOPIC_FALLBACK;
             topicsCache.list = list;             // <-- lưu cache
             renderTopics(list);
@@ -2266,7 +2266,7 @@
             try {
                 const xsrf = document.cookie.split('; ').find(r => r.startsWith('XSRF-TOKEN='))?.split('=')[1] || '';
                 const headers = xsrf ? { 'X-XSRF-TOKEN': xsrf } : {};
-                const res = await fetch('/api/logout', { method: 'POST', headers, credentials: 'same-origin' });
+                const res = await fetch('https://api.soraeigo.com/api/logout', { method: 'POST', headers, credentials: 'same-origin' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 toast('ログアウトしました');
                 await refreshAuthUI();
