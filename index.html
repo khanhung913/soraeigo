@@ -5,6 +5,8 @@
     <meta charset="utf-8" />
     <title>SoraEigo｜英語単語の検索・毎日クイズ・学習ランキング</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="SoraEigo — 英語単語の検索、毎日クイズ、学習ランキング。日本人向けの英語学習サイト。">
+    <link rel="preconnect" href="https://api.soraeigo.com" crossorigin>
 
     <!-- Bootstrap & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -77,9 +79,7 @@
                 radial-gradient(1200px 600px at 110% 110%, color-mix(in oklab, var(--accent-2) 16%, transparent) 0%, transparent 60%),
                 linear-gradient(180deg, var(--bg) 0%, var(--bg-accent) 100%);
             background-attachment: fixed;
-            /* cố định */
             background-repeat: no-repeat;
-            /* không lặp */
         }
 
         .container-xxl {
@@ -492,25 +492,12 @@
             will-change: scroll-position;
         }
 
-
         .tips-track.dragging,
         .tips-track.dragging * {
             user-select: none;
             -webkit-user-select: none;
             -ms-user-select: none;
         }
-
-        .tips-track.dragging * {
-            user-select: none;
-        }
-
-        .tips-item {
-            scroll-snap-align: start;
-            scroll-snap-stop: always;
-        }
-
-        /* tránh bôi đen text khi kéo */
-
 
         .tips-track::-webkit-scrollbar {
             display: none;
@@ -519,6 +506,7 @@
         .tips-item {
             flex: 0 0 calc((100% - (var(--gap) * (var(--per-view) - 1))) / var(--per-view));
             scroll-snap-align: start;
+            scroll-snap-stop: always;
         }
 
         .tips-card {
@@ -683,7 +671,6 @@
         }
 
         .el-modal::before {
-            /* Gradient glow border */
             content: "";
             position: absolute;
             inset: -1px;
@@ -692,9 +679,7 @@
             background:
                 radial-gradient(120% 120% at 0% 0%, color-mix(in oklab, var(--accent) 55%, transparent), transparent 60%),
                 radial-gradient(120% 120% at 100% 100%, color-mix(in oklab, var(--accent-2) 55%, transparent), transparent 60%);
-            -webkit-mask:
-                linear-gradient(#000 0 0) content-box,
-                linear-gradient(#000 0 0);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
             pointer-events: none;
@@ -830,7 +815,6 @@
 
             body {
                 padding-top: 70px;
-                /* hoặc đúng chiều cao header của bạn */
             }
 
             .navbar-brand,
@@ -868,13 +852,12 @@
                             aria-label="Toggle theme">
                             <i class="bi bi-moon-stars"></i>
                         </button>
-                        <!-- Xóa nút đăng nhập Google ở đây -->
                         <button class="btn btn-search-hero d-lg-none ms-2" id="goSearchSm"><i
                                 class="bi bi-search me-2"></i>検索</button>
                     </div>
                 </div>
             </div>
-            <!-- Di chuyển nút đăng nhập Google ra ngoài .navbar-collapse -->
+            <!-- Google 登录按钮放在 collapse 之外 -->
             <a id="googleAuthBtn" class="btn google-btn d-flex align-items-center gap-2 align-self-center ms-2"
                 href="https://api.soraeigo.com/oauth2/authorization/google">
                 <i class="bi bi-google"></i><span class="d-none d-sm-inline">Googleでログイン</span>
@@ -1010,7 +993,6 @@
             { name: 'Aoi', score: 920, time: Date.now() - 5 * 60 * 60 * 1000 },
             { name: 'Minh', score: 900, time: Date.now() - 26 * 60 * 60 * 1000 },
             { name: 'Yuki', score: 880, time: Date.now() - 2 * 24 * 60 * 60 * 1000 },
-
         ];
 
         const QUIZ_FALLBACK = [
@@ -1066,6 +1048,8 @@
                 },
                 body: init.body
             };
+            // FIX: support AbortController
+            if (init.signal) finalInit.signal = init.signal; // <<<<
             try {
                 const res = await fetch(url, finalInit);
                 if (!res.ok) {
@@ -1089,37 +1073,6 @@
             googleBtn.innerHTML = '<i class="bi bi-google"></i><span>Googleでログイン</span>';
         }
 
-        async function refreshAuthUI() {
-            const st = await safeFetchJSON(API_BASE + '/api/auth/status');
-            const logged = !!(st && (st.loggedIn || st.authenticated));
-            let logoutBtn = document.getElementById('btnLogout');
-
-            if (logged) {
-                // Ẩn nút Google, hiển thị Logout
-                if (googleBtn) googleBtn.classList.add('d-none');
-                if (!logoutBtn) {
-                    logoutBtn = document.createElement('button');
-                    logoutBtn.id = 'btnLogout';
-                    logoutBtn.className = 'btn btn-search-hero ms-2';
-                    logoutBtn.textContent = 'Logout';
-                    googleBtn?.parentNode?.appendChild(logoutBtn);
-                    logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logoutFlow(); });
-                }
-            } else {
-                if (googleBtn) googleBtn.classList.remove('d-none');
-                logoutBtn?.remove();
-            }
-        }
-
-        async function logoutFlow() {
-            const ok = true; // (Bạn có thể vẫn giữ showConfirm nếu muốn)
-            if (!ok) return;
-            try {
-                await safeFetchJSON(API_BASE + '/api/logout', { method: 'POST' });
-            } catch (_) { }
-            await refreshAuthUI();
-        }
-
         /* ===============================
            THEME TOGGLER
         =============================== */
@@ -1132,11 +1085,25 @@
             if (fabThemeBtn) fabThemeBtn.innerHTML = next === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
         }
         (function initTheme() { setTheme(document.documentElement.getAttribute('data-theme') || 'light'); })();
-        themeBtn.addEventListener('click', () => { const cur = document.documentElement.getAttribute('data-theme') || 'light'; setTheme(cur === 'light' ? 'dark' : 'light'); });
+        themeBtn.addEventListener('click', () => {
+            const cur = document.documentElement.getAttribute('data-theme') || 'light';
+            setTheme(cur === 'light' ? 'dark' : 'light');
+        });
 
         /* ===============================
            HEADER actions
         =============================== */
+        // FIX: helper cho desktop focus + phát hiện mobile
+        function isMobileLike() {
+            return window.matchMedia('(max-width: 991.98px)').matches || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+        }
+        function focusSearchIfDesktop() {
+            if (!isMobileLike()) {
+                const el = document.getElementById('searchInput');
+                if (el) { el.focus(); el.select(); }
+            }
+        }
+
         const goSearchBtn = document.getElementById('goSearch');
         const goSearchSmBtn = document.getElementById('goSearchSm');
         function smoothScrollTo(id) {
@@ -1146,8 +1113,7 @@
         goSearchBtn?.addEventListener('click', () => smoothScrollTo('#searchSec'));
         goSearchSmBtn?.addEventListener('click', () => smoothScrollTo('#searchSec'));
 
-        // Google auth UI (placeholder)
-        // Thay toàn bộ refreshAuthUI() bằng phiên bản này
+        // Google auth UI (giữ 1 bản duy nhất)
         async function refreshAuthUI() {
             let el = document.querySelector('#btnLogout, #googleAuthBtn');
             if (!el) return;
@@ -1190,11 +1156,9 @@
                 }
             }
 
-            // MOBILE layout fix
             if (window.innerWidth <= 991) {
                 const target = document.getElementById(isLoggedIn ? 'btnLogout' : 'googleAuthBtn');
                 if (target) {
-                    //target.style.margin = '32px auto 0';
                     target.style.display = 'flex';
                     target.style.justifyContent = 'center';
                 }
@@ -1204,10 +1168,9 @@
         document.addEventListener('click', (e) => {
             const el = e.target.closest('#btnLogout');
             if (!el) return;
-            e.preventDefault();       // ngăn mọi điều hướng mặc định
-            logoutFlow();             // hiện popup + gọi /api/logout
+            e.preventDefault();
+            logoutFlow();
         });
-
 
         refreshAuthUI().catch(() => { });
 
@@ -1236,9 +1199,6 @@
 
         /* ===============================
            SEARCH + HISTORY
-           - submit (không realtime)
-           - min render delay 300ms
-           - history clamp tối đa 2 hàng
         =============================== */
         const searchForm = document.getElementById('searchForm');
         const resultList = document.getElementById('resultList');
@@ -1276,7 +1236,6 @@
                 chip.addEventListener('click', () => {
                     inputEl.value = q;
                     pushHistory(q.trim());
-                    // inputEl.focus();  // REMOVED
                     if (!isMobileLike()) focusSearchIfDesktop();
                     doSearch(q);
                 });
@@ -1298,7 +1257,8 @@
             if (searchCtrl) { try { searchCtrl.abort(); } catch (_) { } }
             searchCtrl = new AbortController();
             const url = API_BASE + `/api/search?word=${encodeURIComponent(term)}`;
-            const data = await safeFetchJSON(url);
+            // FIX: truyền signal để abort hiệu lực
+            const data = await safeFetchJSON(url, { signal: searchCtrl.signal }); // <<<<
 
             const elapsed = performance.now() - startedAt;
             if (elapsed < MIN_RENDER_DELAY_MS) { await new Promise(r => setTimeout(r, MIN_RENDER_DELAY_MS - elapsed)); }
@@ -1321,7 +1281,6 @@
                 return;
             }
 
-            // ONLY add to history when result has at least a meaning/detail/example
             if (addHistoryIfValid) {
                 const hasMeaning = normalized.some(x => x.meaningJa || x.detailMeaning || x.example);
                 if (hasMeaning) pushHistory(rawTerm);
@@ -1359,7 +1318,6 @@
             searchDebounce = setTimeout(() => {
                 const q = inputEl.value || '';
                 if (!q.trim()) return;
-                // pushHistory removed here; now conditional inside doSearch
                 doSearch(q, true);
             }, 300);
         });
@@ -1395,7 +1353,7 @@
                     const w = x.word || ''; if (!w) return;
                     inputEl.value = w;
                     pushHistory(w.trim());
-                    if (!isMobileLike()) focusSearchIfDesktop(); // CHANGED
+                    if (!isMobileLike()) focusSearchIfDesktop();
                     doSearch(w);
                 });
                 wrap.appendChild(col);
@@ -1434,8 +1392,6 @@
 
         /* ===============================
            LEADERBOARD + QUIZ
-           - Cho phép chơi KHÔNG login: lưu local personal best, KHÔNG submit DB
-           - Nếu login: submit lên /api/quiz/submit và refresh leaderboard
         =============================== */
         const leaderboardWrap = document.getElementById('leaderboardWrap');
         const quizWrap = document.getElementById('quizWrap');
@@ -1445,15 +1401,11 @@
             questions: [], idx: 0, correct: 0, startedAt: 0,
             timerId: null, elapsedSec: 0, qStartedMs: 0, points: 0,
             scoreRafId: null, scoreLastVal: 100, loggedIn: false, answered: false,
-            mode: 'idle'          // 'general' | 'topic' | 'idle'
+            mode: 'idle'
         };
         async function pingAchievementStart() {
-            // Chỉ ping khi quiz tổng
             if (quizState.mode !== 'general') return;
-            try {
-                // endpoint ví dụ; nếu backend chưa có sẽ fail yên lặng
-                await fetch('/api/achievements/quiz-total/start', { method: 'POST' });
-            } catch (_) { }
+            try { await fetch('/api/achievements/quiz-total/start', { method: 'POST' }); } catch (_) { }
         }
 
         function initials(name = '') {
@@ -1498,7 +1450,7 @@
                 row.innerHTML = `
             <div class="lb-rank">${i + 1}</div>
             <div class="lb-avatar" title="${escapeHtml(u.name)}">
-              ${u.avatar ? `<img src="${u.avatar}" alt="" style="width:40px;height:40px;border-radius:50%">` : escapeHtml(initials(u.name))}
+              ${u.avatar ? `<img src="${escapeHtml(u.avatar)}" alt="" style="width:40px;height:40px;border-radius:50%">` : escapeHtml(initials(u.name))}
             </div>
             <div class="d-flex flex-column">
               <div class="lb-name">${escapeHtml(u.name)}</div>
@@ -1568,37 +1520,28 @@
         function stopScoreCountdown() { if (quizState.scoreRafId) { cancelAnimationFrame(quizState.scoreRafId); quizState.scoreRafId = null; } }
         function startScoreCountdown() {
             stopScoreCountdown();
-            // Thời lượng chuẩn mỗi câu (ms)
             const COUNTDOWN_MS = 10000;
-
-            // EASING: ease-in (tăng tốc dần). Có thể tinh chỉnh exponent 1.6~2.2
-            const EASE_EXP = 2.2; // càng lớn càng tăng tốc cuối nhiều
+            const EASE_EXP = 2.2;
 
             const bar = quizWrap.querySelector('#scoreCountdownBar');
             const val = quizWrap.querySelector('#scoreCountdownVal');
             const meter = quizWrap.querySelector('.score-meter');
             if (!bar || !val || !meter) return;
 
-            // reset UI
             bar.style.width = '100%';
             val.textContent = '100';
             meter.setAttribute('aria-valuenow', '100');
             quizState.scoreLastVal = 100;
 
-            function easeIn(p) {
-                // clamp p = [0,1]
-                p = Math.max(0, Math.min(1, p));
-                return Math.pow(p, EASE_EXP);
-            }
+            function easeIn(p) { p = Math.max(0, Math.min(1, p)); return Math.pow(p, EASE_EXP); }
 
             function tick() {
                 const elapsed = Math.max(0, performance.now() - quizState.qStartedMs);
-                const prog = Math.max(0, Math.min(1, elapsed / COUNTDOWN_MS)); // 0..1
-                const eased = easeIn(prog);              // tiến độ đã easing
+                const prog = Math.max(0, Math.min(1, elapsed / COUNTDOWN_MS));
+                const eased = easeIn(prog);
                 const remainPct = Math.max(0, 100 * (1 - eased));
                 const remainInt = Math.round(remainPct);
 
-                // cập nhật UI
                 bar.style.width = `${remainPct}%`;
                 val.textContent = String(remainInt);
                 meter.setAttribute('aria-valuenow', String(remainInt));
@@ -1607,44 +1550,29 @@
                 if (prog < 1) {
                     quizState.scoreRafId = requestAnimationFrame(tick);
                 } else {
-                    // HẾT GIỜ
                     stopScoreCountdown();
-                    if (!quizState.answered) {
-                        timesUpAutoWrong();  // << NEW: tính sai & auto next
-                    }
+                    if (!quizState.answered) timesUpAutoWrong();
                 }
             }
             function timesUpAutoWrong() {
-                quizState.answered = true; // khóa lại
-
-                // khóa các option
+                quizState.answered = true;
                 const buttons = [...quizWrap.querySelectorAll('.quiz-option')];
                 buttons.forEach(b => b.disabled = true);
-
-                // highlight đáp án đúng (không highlight "wrong" vì user không chọn)
                 const q = quizState.questions[quizState.idx];
                 if (typeof q?.answerIndex === 'number' && buttons[q.answerIndex]) {
                     buttons[q.answerIndex].classList.add('correct');
                 }
-
                 const expl = quizWrap.querySelector('#explain');
                 if (expl) {
                     expl.style.display = '';
                     expl.innerHTML = `<i class="bi bi-hourglass-bottom me-1"></i>時間切れ：この問題は不正解としてカウントされます。`;
                 }
-
-                // bật nút next (phòng trường hợp muốn ấn tay)
                 const nextBtn = quizWrap.querySelector('#btnNext');
                 if (nextBtn) nextBtn.disabled = false;
-
-                // auto-next
                 setTimeout(nextQuestion, 900);
             }
-
-
             quizState.scoreRafId = requestAnimationFrame(tick);
         }
-
 
         function setTimerRunning(running) {
             if (running) {
@@ -1691,7 +1619,7 @@
         }
 
         function handleAnswer(i, btn, q) {
-            if (quizState.answered) return;         // << NEW: chống double
+            if (quizState.answered) return;
             quizState.answered = true;
             stopScoreCountdown();
             const buttons = [...quizWrap.querySelectorAll('.quiz-option')]; buttons.forEach(b => b.disabled = true);
@@ -1714,13 +1642,11 @@
 
         function nextQuestion() { if (quizState.idx < quizState.questions.length - 1) { quizState.idx++; renderQuestion(); } else { finishQuiz(); } }
 
-        // ----- (5) CHỈ UPDATE BEST/SUBMIT KHI mode === 'general' -----
         function summaryHtml(rankInfo, savedToDb) {
             const mm = String(Math.floor(quizState.elapsedSec / 60)).padStart(2, '0');
             const ss = String(quizState.elapsedSec % 60).padStart(2, '0');
             const acc = Math.round((quizState.correct / quizState.questions.length) * 100);
             const bestPrev = getPersonalBest();
-            // chỉ tính bestChanged khi là quiz tổng
             const newBest = quizState.mode === 'general' ? Math.max(bestPrev, quizState.points) : bestPrev;
             const bestChanged = newBest !== bestPrev;
 
@@ -1739,8 +1665,6 @@
     </div>`;
         }
 
-
-        // ----- (6) FINISH: Gating theo mode -----
         async function finishQuiz() {
             setTimerRunning(false); stopScoreCountdown();
             const payload = {
@@ -1752,7 +1676,6 @@
                 points: quizState.points
             };
 
-            // Personal best: chỉ cập nhật khi quiz tổng
             if (quizState.mode === 'general' && quizState.points > getPersonalBest()) {
                 setPersonalBest(quizState.points);
             }
@@ -1762,7 +1685,6 @@
                 quizState.loggedIn = !!(st && (st.loggedIn || st.authenticated || st.user));
             } catch (_) { quizState.loggedIn = false; }
 
-            // Chỉ submit DB khi quiz tổng + đã login
             if (quizState.mode === 'general' && quizState.loggedIn) {
                 try {
                     const submitRes = await safeFetchJSON(API_BASE + '/api/quiz/submit', {
@@ -1770,7 +1692,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-                    rankInfo = { rank: submitRes.rank ?? submitRes.data?.rank ?? null };
+                    rankInfo = { rank: submitRes?.rank ?? submitRes?.data?.rank ?? null };
                     savedToDb = true;
                 } catch (_) { savedToDb = false; }
             } else {
@@ -1782,7 +1704,6 @@
             quizWrap.querySelector('#btnReplay')?.addEventListener('click', handleStartQuizClick);
             if (quizState.mode === 'general') loadLeaderboard();
         }
-
 
         function ensureTenQuestions(qs) {
             const out = Array.isArray(qs) ? [...qs] : [];
@@ -1798,7 +1719,7 @@
             quizWrap.innerHTML = `<div class="text-secondary small"><i class="bi bi-hourglass-split me-2"></i>読み込み中...</div>`;
             let questions = [];
             try {
-                const res = await fetch('https://api.soraeigo.com/api/quiz/start?size=10');
+                const res = await fetch('https://api.soraeigo.com/api/quiz/start?size=10', { credentials: 'include' });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 const arr = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
@@ -1822,18 +1743,13 @@
             setTimerRunning(true); renderQuestion();
         }
 
-        async function handleStartQuizClick() {
-            // luôn cho chơi dù chưa login (yêu cầu)
-            startQuiz();
-        }
+        async function handleStartQuizClick() { startQuiz(); }
 
-        // initial renders
         renderQuizStart();
         loadLeaderboard();
 
         /* ===============================
            VOCAB: topic -> subtopic -> wordlist
-           - Có nút "このテーマでクイズ"
         =============================== */
         const vcTopicGrid = qs('#vcTopicGrid');
         const vcSubGrid = qs('#vcSubGrid');
@@ -1844,11 +1760,9 @@
         const btnBackVocab = qs('#btnBackVocab');
         let currentTopic = null, currentSub = null;
         const topicsCache = { list: null };
-        const subtopicsCache = new Map(); // topicId -> subtopic[]
-        const vocabCache = new Map();     // subId -> word[]
+        const subtopicsCache = new Map();
+        const vocabCache = new Map();
 
-
-        // Hiển thị/ẩn nút trở lại tuỳ màn
         function showBackBtn(show, handler) {
             btnBackVocab.classList.toggle('d-none', !show);
             btnBackVocab.onclick = show ? handler : null;
@@ -1908,7 +1822,6 @@
                 renderSubtopics(subtopicsCache.get(currentTopic.id) || SUBTOPIC_FALLBACK[currentTopic.id] || [])
             );
 
-
             (list || []).forEach((w, i) => {
                 const col = document.createElement('div'); col.className = 'col-12 col-md-6';
                 col.innerHTML = `
@@ -1936,7 +1849,7 @@
             if (!list) {
                 const data = await safeFetchJSON(`https://api.soraeigo.com/api/subtopics?topicId=${encodeURIComponent(t.id)}`);
                 list = Array.isArray(data) && data.length ? data : (SUBTOPIC_FALLBACK[t.id] || []);
-                subtopicsCache.set(t.id, list);    // <-- lưu cache
+                subtopicsCache.set(t.id, list);
             }
             renderSubtopics(list);
         }
@@ -1947,7 +1860,7 @@
             if (!list) {
                 const data = await safeFetchJSON(`https://api.soraeigo.com/api/vocab?subId=${encodeURIComponent(s.id)}`);
                 list = Array.isArray(data) && data.length ? data : (VOCAB_FALLBACK[s.id] || []);
-                vocabCache.set(s.id, list);        // <-- lưu cache
+                vocabCache.set(s.id, list);
             }
             renderWords(list);
         }
@@ -1955,6 +1868,7 @@
         btnTopicQuiz.addEventListener('click', async () => {
             if (!currentSub) return;
             quizState.mode = 'topic';
+            let qsData = []; // FIX: khai báo trước để dùng ở cả hai nhánh
             const api = await safeFetchJSON(API_BASE + `/api/quiz/byTopic?subId=${encodeURIComponent(currentSub.id)}&size=10`);
             if (Array.isArray(api) && api.length) {
                 qsData = api.map(x => ({
@@ -1965,12 +1879,10 @@
                         x.option3 ?? x.options?.[2],
                         x.option4 ?? x.options?.[3]
                     ].filter(Boolean),
-                    // Đáp án trong DB là 1-4, cần chuyển về 0-3
                     answerIndex: typeof x.answerIndex === 'number' ? (x.answerIndex - 1) : 0,
                     explanation: x.explanation ?? ''
                 }));
             } else {
-                // Tạo từ fallback VOCAB: câu hỏi nghĩa từ
                 const voc = VOCAB_FALLBACK[currentSub.id] || [];
                 const pool = voc.slice(0, 12);
                 qsData = pool.map((v, idx) => {
@@ -1990,14 +1902,12 @@
         (async function initTopics() {
             const data = await safeFetchJSON(API_BASE + '/api/topics');
             const list = Array.isArray(data) && data.length ? data : TOPIC_FALLBACK;
-            topicsCache.list = list;             // <-- lưu cache
+            topicsCache.list = list;
             renderTopics(list);
         })();
 
-
         /* ===============================
            TIPS CAROUSEL — “giả vô hạn”
-           - render 1 dải [items]*3; khi cuộn gần biên -> nhảy về giữa
         =============================== */
         const TIPS_DATA = [
             { title: '毎日5分の音読', desc: '短い英文を声に出して読むと発音と語順の感覚が鍛えられる。', bullets: ['短文×3を繰り返す', '録音して自己チェック'] },
@@ -2006,14 +1916,13 @@
             { title: 'インプットの比率', desc: '多読・多聴を増やして語感を作る。', bullets: ['1日英語30分', '興味分野から'] },
             { title: 'アウトプット', desc: '短文ライティング→音読→録音のループ。', bullets: ['1日3文を書く', '翌日リライト'] },
         ];
-        // === Sensitivity tuning (desktop drag) ===
-        const DRAG_RESIST = 0.75;   // <1: kéo tay -> đi ít hơn
-        const MAX_VELOCITY = 0.80;   // px/ms: trần tốc độ quán tính
-        const START_MOMENTUM = 0.25;   // px/ms: phải nhanh hơn ngưỡng này mới kích hoạt quán tính
-        const STOP_VELOCITY = 0.05;   // px/ms: thấp hơn thì dừng trôi
-        const DECEL = 0.004;  // px/ms^2: hãm mạnh hơn để ngắn lại
+        const DRAG_RESIST = 0.75;
+        const MAX_VELOCITY = 0.80;
+        const START_MOMENTUM = 0.25;
+        const STOP_VELOCITY = 0.05;
+        const DECEL = 0.004;
 
-        const CLONES = 5; // số lần lặp toàn dải (>=3). Dùng số lẻ để có "giữa".
+        const CLONES = 5;
         const tipsTrack = document.getElementById('tipsTrack');
 
         function tipCardHtml(tip, i) {
@@ -2038,17 +1947,14 @@
 
         function renderTipsInfinite() {
             tipsTrack.innerHTML = '';
-            // render CLONES lần
             for (let c = 0; c < CLONES; c++) {
                 tipsTrack.insertAdjacentHTML('beforeend', TIPS_DATA.map(tipCardHtml).join(''));
             }
-
-            // đặt scroll ở “dải giữa”
             requestAnimationFrame(() => {
                 const step = cardStep();
-                const span = step * TIPS_DATA.length; // chiều dài một dải
+                const span = step * TIPS_DATA.length;
                 const centerIdx = Math.floor(CLONES / 2);
-                tipsTrack.scrollLeft = span * centerIdx; // chính giữa
+                tipsTrack.scrollLeft = span * centerIdx;
             });
         }
 
@@ -2065,42 +1971,28 @@
 
             if (left < lower || left > upper) {
                 const prevBehavior = tipsTrack.style.scrollBehavior;
-                tipsTrack.style.scrollBehavior = 'auto'; // tắt smooth trong 1 tick
-
+                tipsTrack.style.scrollBehavior = 'auto';
                 tipsTrack.scrollLeft = left < lower ? (left + span) : (left - span);
-
-                // trả lại như cũ
                 tipsTrack.style.scrollBehavior = prevBehavior || '';
             }
         }
 
         renderTipsInfinite();
-        function perView() {
-            // desktop: 3 card/khung; mobile: 1
-            return window.matchMedia('(min-width: 992px)').matches ? 3 : 1;
-        }
+        function perView() { return window.matchMedia('(min-width: 992px)').matches ? 3 : 1; }
 
+        document.getElementById('tipsPrev').addEventListener('click', () => {
+            tipsTrack.scrollBy({ left: -cardStep() * perView(), behavior: 'smooth' });
+        });
+        document.getElementById('tipsNext').addEventListener('click', () => {
+            tipsTrack.scrollBy({ left: cardStep() * perView(), behavior: 'smooth' });
+        });
 
-        document.getElementById('tipsPrev')
-            .addEventListener('click', () => {
-                tipsTrack.scrollBy({ left: -cardStep() * perView(), behavior: 'smooth' });
-            });
-
-        document.getElementById('tipsNext')
-            .addEventListener('click', () => {
-                tipsTrack.scrollBy({ left: cardStep() * perView(), behavior: 'smooth' });
-            });
-
-        // lắng nghe sự kiện scroll trên đúng phần tử
         tipsTrack.addEventListener('scroll', () => { ensureLoop(); }, { passive: true });
 
-        // Lăn chuột: map delta dọc -> ngang, mượt và có cảm giác di chuyển
         tipsTrack.addEventListener('wheel', (e) => {
-            // Nếu user đang cuộn ngang (Shift+wheel) thì giữ nguyên
             const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-            // Ngăn cuộn trang, chỉ cuộn thanh tips
             e.preventDefault();
-            tipsTrack.scrollLeft += delta * 0.6; // hệ số 1.1 cho cảm giác rõ ràng
+            tipsTrack.scrollLeft += delta * 0.6;
             ensureLoop();
         }, { passive: false });
 
@@ -2109,17 +2001,14 @@
         let lastLeft = 0, lastT = 0, velocity = 0;
         let momentumRaf = null;
 
-        function stopMomentum() {
-            if (momentumRaf) cancelAnimationFrame(momentumRaf);
-            momentumRaf = null;
-        }
+        function stopMomentum() { if (momentumRaf) cancelAnimationFrame(momentumRaf); momentumRaf = null; }
 
         function momentumScroll(v0) {
             let v = clamp(v0, -MAX_VELOCITY, MAX_VELOCITY);
             const tStart = performance.now();
             let tPrev = tStart;
 
-            tipsTrack.classList.add('dragging'); // tắt snap khi đang trôi
+            tipsTrack.classList.add('dragging');
 
             function step(now) {
                 const dt = now - tPrev; tPrev = now;
@@ -2128,11 +2017,10 @@
                 tipsTrack.scrollLeft += v * dt;
                 ensureLoop();
 
-                // hãm đều
                 v -= Math.sign(v) * DECEL * dt;
 
                 if (Math.abs(v) <= STOP_VELOCITY || (now - tStart) > 2000) {
-                    tipsTrack.classList.remove('dragging'); // bật snap lại
+                    tipsTrack.classList.remove('dragging');
                     momentumRaf = null;
                     return;
                 }
@@ -2145,32 +2033,29 @@
             isDown = true;
             pointerId = e.pointerId;
             tipsTrack.setPointerCapture(pointerId);
-            tipsTrack.classList.add('dragging');  // tắt snap + user-select
+            tipsTrack.classList.add('dragging');
 
             stopMomentum();
             startX = e.clientX;
             startLeft = tipsTrack.scrollLeft;
             lastLeft = startLeft;
             lastT = performance.now();
-            velocity = 0; // reset
+            velocity = 0;
         });
 
         tipsTrack.addEventListener('pointermove', (e) => {
             if (!isDown) return;
             e.preventDefault();
-
-            // kéo tay có “lì” hơn
             const dx = (e.clientX - startX) * DRAG_RESIST;
             tipsTrack.scrollLeft = startLeft - dx;
             ensureLoop();
 
-            // vận tốc tức thời + low-pass filter (mượt & chống spike)
             const now = performance.now();
             const dt = now - lastT;
             if (dt > 0) {
                 const curLeft = tipsTrack.scrollLeft;
-                const instV = (curLeft - lastLeft) / dt;            // px/ms
-                velocity = velocity * 0.8 + instV * 0.2;            // lọc mượt
+                const instV = (curLeft - lastLeft) / dt;
+                velocity = velocity * 0.8 + instV * 0.2;
                 velocity = clamp(velocity, -MAX_VELOCITY, MAX_VELOCITY);
                 lastLeft = curLeft; lastT = now;
             }
@@ -2180,11 +2065,10 @@
             if (pointerId !== null) { try { tipsTrack.releasePointerCapture(pointerId); } catch (_) { } }
             isDown = false; pointerId = null;
 
-            // chỉ trôi nếu đủ nhanh
             if (Math.abs(velocity) > START_MOMENTUM) {
                 momentumScroll(velocity);
             } else {
-                tipsTrack.classList.remove('dragging'); // bật snap lại
+                tipsTrack.classList.remove('dragging');
             }
             ensureLoop();
         }
@@ -2212,19 +2096,16 @@
         window.addEventListener('scroll', () => { const y = window.scrollY || document.documentElement.scrollTop; if (toTop) (y > 400 ? toTop.classList.add('show') : toTop.classList.remove('show')); });
         toTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-        // Modal confirm đơn giản (không phụ thuộc lib; dùng Bootstrap nếu bạn muốn)
-        // Drop-in: super pretty confirm modal (returns Promise<boolean>)
         function showConfirm({
             title = '確認',
             message = 'この操作を実行しますか？',
             okText = 'OK',
             cancelText = 'キャンセル',
-            variant = 'primary',     // 'primary' | 'danger'
-            icon = 'bi-stars',       // bootstrap icon class
+            variant = 'primary',
+            icon = 'bi-stars',
             allowOutsideClose = false
         } = {}) {
             return new Promise(resolve => {
-                // create DOM
                 const overlay = document.createElement('div');
                 overlay.className = 'el-overlay';
                 overlay.innerHTML = `
@@ -2246,7 +2127,6 @@
                 const btnOk = overlay.querySelector('[data-role="ok"]');
                 const btnCancel = overlay.querySelector('[data-role="cancel"]');
 
-                // Focus management
                 const prevFocus = document.activeElement;
                 setTimeout(() => btnOk.focus(), 10);
 
@@ -2260,7 +2140,6 @@
                     }, 140);
                 }
 
-                // Events
                 btnOk.addEventListener('click', () => close(true));
                 btnCancel.addEventListener('click', () => close(false));
                 if (allowOutsideClose) {
@@ -2269,12 +2148,10 @@
                     });
                 }
 
-                // Keyboard: ESC -> cancel, Enter -> ok, trap Tab
                 overlay.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') { e.preventDefault(); close(false); }
                     if (e.key === 'Enter') { e.preventDefault(); close(true); }
                     if (e.key === 'Tab') {
-                        // trap: cycle btnCancel <-> btnOk
                         const focusables = [btnCancel, btnOk].filter(Boolean);
                         const i = focusables.indexOf(document.activeElement);
                         if (e.shiftKey) {
@@ -2288,7 +2165,6 @@
                 }, true);
             });
         }
-
 
         function getCookie(name) {
             return document.cookie.split('; ').find(row => row.startsWith(name + '='))?.split('=')[1] || '';
@@ -2308,7 +2184,8 @@
             try {
                 const xsrf = document.cookie.split('; ').find(r => r.startsWith('XSRF-TOKEN='))?.split('=')[1] || '';
                 const headers = xsrf ? { 'X-XSRF-TOKEN': xsrf } : {};
-                const res = await fetch('https://api.soraeigo.com/api/logout', { method: 'POST', headers, credentials: 'same-origin' });
+                // FIX: dùng include để gửi cookie cross-site
+                const res = await fetch('https://api.soraeigo.com/api/logout', { method: 'POST', headers, credentials: 'include' }); // <<<<
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 toast('ログアウトしました');
                 await refreshAuthUI();
@@ -2320,7 +2197,6 @@
 
         document.getElementById('btnLogout')?.addEventListener('click', logoutFlow);
 
-        // Minimal toast ví dụ (tuỳ bạn đã có sẵn hay chưa)
         function toast(msg) {
             const el = document.createElement('div');
             el.className = 'position-fixed bottom-0 end-0 m-3 p-2 rounded bg-dark text-white small shadow';
@@ -2331,7 +2207,7 @@
 
         const btnShowAllTips = document.getElementById('btnShowAllTips');
         const allTipsExpanded = document.getElementById('allTipsExpanded');
-        const tipsCarouselWrap = document.getElementById('tipsCarouselWrap'); // << thêm
+        const tipsCarouselWrap = document.getElementById('tipsCarouselWrap');
         let tipsExpanded = false;
 
         function renderAllTipsInline() {
@@ -2359,12 +2235,12 @@
             if (tipsExpanded) {
                 renderAllTipsInline();
                 allTipsExpanded.classList.remove('d-none');
-                tipsCarouselWrap?.classList.add('d-none');          // ẩn carousel
+                tipsCarouselWrap?.classList.add('d-none');
                 btnShowAllTips.textContent = '閉じる';
                 btnShowAllTips.setAttribute('aria-expanded', 'true');
             } else {
                 allTipsExpanded.classList.add('d-none');
-                tipsCarouselWrap?.classList.remove('d-none');       // hiện lại carousel
+                tipsCarouselWrap?.classList.remove('d-none');
                 btnShowAllTips.textContent = 'すべて見る';
                 btnShowAllTips.setAttribute('aria-expanded', 'false');
             }
@@ -2385,6 +2261,5 @@
         }
     </style>
 </body>
-
 
 </html>
