@@ -1054,19 +1054,64 @@
         function escapeHtml(str = '') {
             return String(str).replace(/[&<>"'`=\/]/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;' }[s]));
         }
-        async function safeFetchJSON(url, init) {
-            try { const res = await fetch(url, init); if (!res.ok) throw new Error('HTTP ' + res.status); return await res.json(); }
-            catch (e) { if (e.name !== 'AbortError') console.warn('[fetch]', url, e); return null; }
-        }
-        // >>> ADD: detect mobile + safe focus
-        function isMobileLike() {
-            return ('ontouchstart' in window || navigator.maxTouchPoints > 0)
-                && window.matchMedia('(max-width: 991.98px)').matches;
-        }
-        function focusSearchIfDesktop() {
-            if (!isMobileLike()) {
-                document.getElementById('searchInput')?.focus();
+        const API_BASE = 'https://api.soraeigo.com';
+
+        async function safeFetchJSON(url, init = {}) {
+            const finalInit = {
+                credentials: 'include',
+                headers: { 'Accept': 'application/json', ...(init.headers || {}) },
+                ...init
+            };
+            try {
+                const res = await fetch(url, finalInit);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                // 204 -> null
+                if (res.status === 204) return null;
+                const ct = res.headers.get('content-type') || '';
+                if (!ct.includes('json')) return null;
+                return await res.json();
+            } catch (e) {
+                if (e.name !== 'AbortError') console.warn('[fetch]', url, e);
+                return null;
             }
+        }
+
+        // Khởi tạo nút Google (nếu tồn tại)
+        const googleBtn = document.getElementById('googleAuthBtn');
+        if (googleBtn) {
+            googleBtn.href = API_BASE + '/oauth2/authorization/google';
+            googleBtn.innerHTML = '<i class="bi bi-google"></i><span>Googleでログイン</span>';
+        }
+
+        async function refreshAuthUI() {
+            const st = await safeFetchJSON(API_BASE + '/api/auth/status');
+            const logged = !!(st && (st.loggedIn || st.authenticated));
+            let logoutBtn = document.getElementById('btnLogout');
+
+            if (logged) {
+                // Ẩn nút Google, hiển thị Logout
+                if (googleBtn) googleBtn.classList.add('d-none');
+                if (!logoutBtn) {
+                    logoutBtn = document.createElement('button');
+                    logoutBtn.id = 'btnLogout';
+                    logoutBtn.className = 'btn btn-search-hero ms-2';
+                    logoutBtn.textContent = 'Logout';
+                    googleBtn?.parentNode?.appendChild(logoutBtn);
+                    logoutBtn.addEventListener('click', (e) => { e.preventDefault(); logoutFlow(); });
+                }
+            } else {
+                if (googleBtn) googleBtn.classList.remove('d-none');
+                logoutBtn?.remove();
+            }
+        }
+
+        async function logoutFlow() {
+            const ok = true; // (Bạn có thể vẫn giữ showConfirm nếu muốn)
+            if (!ok) return;
+            try {
+                await safeFetchJSON(API_BASE + '/api/logout', { method: 'POST' });
+            } catch (_) { }
+            await refreshAuthUI();
         }
 
         /* ===============================
@@ -1246,8 +1291,8 @@
 
             if (searchCtrl) { try { searchCtrl.abort(); } catch (_) { } }
             searchCtrl = new AbortController();
-            const url = `https://api.soraeigo.com/api/search?word=${encodeURIComponent(term)}`;
-            const data = await safeFetchJSON(url, { signal: searchCtrl.signal });
+            const url = API_BASE + `/api/search?word=${encodeURIComponent(term)}`;
+            const data = await safeFetchJSON(url);
 
             const elapsed = performance.now() - startedAt;
             if (elapsed < MIN_RENDER_DELAY_MS) { await new Promise(r => setTimeout(r, MIN_RENDER_DELAY_MS - elapsed)); }
@@ -1352,7 +1397,7 @@
             wireSpeakButtons(wrap);
         }
         (async function loadDaily() {
-            const data = await safeFetchJSON('https://api.soraeigo.com/api/todayVocab');
+            const data = await safeFetchJSON(API_BASE + '/api/todayVocab');
             let list = [];
             if (Array.isArray(data)) list = data;
             else if (data && typeof data === 'object') list = [data];
@@ -1461,10 +1506,8 @@
         }
 
         async function loadLeaderboard() {
+            const data = await safeFetchJSON(API_BASE + '/api/quiz/leaderboard');
             try {
-                const res = await fetch('https://api.soraeigo.com/api/quiz/leaderboard?size=10');
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                const data = await res.json();
                 const arr = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
                 const normalized = arr.map(x => ({
                     name: x.name ?? x.userName ?? 'Guest',
@@ -1716,19 +1759,13 @@
             // Chỉ submit DB khi quiz tổng + đã login
             if (quizState.mode === 'general' && quizState.loggedIn) {
                 try {
-                    const res = await fetch('https://api.soraeigo.com/api/quiz/submit', {
+                    const submitRes = await safeFetchJSON(API_BASE + '/api/quiz/submit', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                            // 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')  // nếu backend yêu cầu
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-                    if (res.ok) {
-                        const data = await res.json();
-                        rankInfo = { rank: data.rank ?? data.data?.rank ?? null };
-                        savedToDb = true;
-                    } else savedToDb = false;
+                    rankInfo = { rank: submitRes.rank ?? submitRes.data?.rank ?? null };
+                    savedToDb = true;
                 } catch (_) { savedToDb = false; }
             } else {
                 savedToDb = false;
@@ -1912,8 +1949,7 @@
         btnTopicQuiz.addEventListener('click', async () => {
             if (!currentSub) return;
             quizState.mode = 'topic';
-            let qsData = null;
-            const api = await safeFetchJSON(`https://api.soraeigo.com/api/quiz/byTopic?subId=${encodeURIComponent(currentSub.id)}&size=10`);
+            const api = await safeFetchJSON(API_BASE + `/api/quiz/byTopic?subId=${encodeURIComponent(currentSub.id)}&size=10`);
             if (Array.isArray(api) && api.length) {
                 qsData = api.map(x => ({
                     question: x.question ?? `Meaning of "${x.word}"?`,
@@ -1946,7 +1982,7 @@
         });
 
         (async function initTopics() {
-            const data = await safeFetchJSON('https://api.soraeigo.com/api/topics');
+            const data = await safeFetchJSON(API_BASE + '/api/topics');
             const list = Array.isArray(data) && data.length ? data : TOPIC_FALLBACK;
             topicsCache.list = list;             // <-- lưu cache
             renderTopics(list);
@@ -2346,5 +2382,3 @@
 
 
 </html>
-
-
