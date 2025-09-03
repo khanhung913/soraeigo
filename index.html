@@ -1058,20 +1058,26 @@
 
         async function safeFetchJSON(url, init = {}) {
             const finalInit = {
+                method: init.method || 'GET',
                 credentials: 'include',
-                headers: { 'Accept': 'application/json', ...(init.headers || {}) },
-                ...init
+                headers: {
+                    'Accept': 'application/json',
+                    ...(init.headers || {})
+                },
+                body: init.body
             };
             try {
                 const res = await fetch(url, finalInit);
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                // 204 -> null
-                if (res.status === 204) return null;
+                if (!res.ok) {
+                    if (res.status === 401 || res.status === 403) return null;
+                    console.warn('[safeFetchJSON] HTTP ' + res.status + ' -> ' + url);
+                    return null;
+                }
                 const ct = res.headers.get('content-type') || '';
-                if (!ct.includes('json')) return null;
+                if (!ct.includes('application/json')) return null;
                 return await res.json();
             } catch (e) {
-                if (e.name !== 'AbortError') console.warn('[fetch]', url, e);
+                if (e.name !== 'AbortError') console.warn('[safeFetchJSON] error', url, e);
                 return null;
             }
         }
